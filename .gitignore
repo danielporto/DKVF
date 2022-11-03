@@ -1,0 +1,33 @@
+
+# ignore the DKVF Core src in protocol implementations
+**/src/edu/msu/cse/dkvf/controlMetadata
+**/src/edu/msu/cse/dkvf/controlMetadata/ControlMetadata.java
+**/src/edu/msu/cse/dkvf/ClientListener.java
+**/src/edu/msu/cse/dkvf/ServerListener.java
+**/src/edu/msu/cse/dkvf/Storage.java
+**/src/edu/msu/cse/dkvf/DualConsoleHandler.java
+**/src/edu/msu/cse/dkvf/bdbStorage/BDBStorage.java
+**/src/edu/msu/cse/dkvf/DKVFServer.java
+**/src/edu/msu/cse/dkvf/config/Storage.java
+**/src/edu/msu/cse/dkvf/config/ConnectTo.java
+**/src/edu/msu/cse/dkvf/config/ServerInfo.java
+**/src/edu/msu/cse/dkvf/config/Property.java
+**/src/edu/msu/cse/dkvf/config/ObjectFactory.java
+**/src/edu/msu/cse/dkvf/config/ConfigReader.java
+**/src/edu/msu/cse/dkvf/config/Config.java
+**/src/edu/msu/cse/dkvf/Utils.java
+**/src/edu/msu/cse/dkvf/ycsbDriver/DKVFDriver.java
+**/src/edu/msu/cse/dkvf/ServerConnector.java
+**/src/edu/msu/cse/dkvf/ycsbWorkload/DKVFWorkload.java
+**/src/edu/msu/cse/dkvf/ControlListenerHandler.java
+**/src/edu/msu/cse/dkvf/newFIle.txt
+**/src/edu/msu/cse/dkvf/ClientHandler.java
+**/src/edu/msu/cse/dkvf/ServerHandler.java
+**/src/edu/msu/cse/dkvf/DKVFBase.java
+**/src/edu/msu/cse/dkvf/ChannelManager.java
+**/src/edu/msu/cse/dkvf/ClientMessageAgent.java
+**/src/edu/msu/cse/dkvf/DKVFClient.java
+**/src/XSDs/Config.xsd
+
+# changes in DKVF Core dir must be included
+!DKVF_core/
