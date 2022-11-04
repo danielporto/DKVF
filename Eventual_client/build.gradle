@@ -12,7 +12,7 @@ description = "Eventual consistency client implementation"
 sourceSets {
     main {
         java {
-            srcDirs = ['src']
+            srcDirs = ['src','src-gen']
         }
     }
 }
@@ -25,27 +25,34 @@ repositories {
 dependencies {
     implementation files('../libs/Berkeley-DB/je-6.4.25.jar')
     implementation files('../libs/Protobuf/jaxb-api-2.3.1.wso2v2.jar')
-    implementation files('../libs/Protobuf/protobuf-java-3.4.0.jar')
+    implementation files('../libs/Protobuf/protobuf-java-3.21.9.jar')
     implementation files('../libs/YCSB/htrace-core4-4.1.0-incubating.jar')
     implementation files('../libs/YCSB/HdrHistogram-2.1.4.jar')
     implementation files('../libs/YCSB/core-0.14.0-SNAPSHOT.jar')
     implementation files('../libs/YCSB/jackson-core-asl-1.9.4.jar')
     implementation files('../libs/YCSB/jackson-mapper-asl-1.9.13.jar')
-    // implementation project(':DKVF_core')
+//     implementation project(':DKVF_core')
 }
 
-task import_dkvf_core {
+task import_eventual_server_core {
     group 'setup'
-    description 'Copy the source files of DKVF_core into the src to brake circular dependencies'
+    description 'Copy the source files of Eventual_server/DKVF_core into the src to brake circular dependencies'
     doLast{
         println 'Eventual_client - Copying core files into local dir'
+        // copy the core (which includes the XSDs
         copy {
             from('../DKVF_core/src')
             into('src')
         }
+        // copy the core updated, which includes the Metadata generated from protobuf
+        copy {
+            from('../Eventual_server/src-gen')
+            into('src-gen')
+        }
+
     }
 }
-compileJava.dependsOn(import_dkvf_core)
+compileJava.dependsOn(import_eventual_server_core)
 
 // configure jar
 jar {
@@ -75,6 +82,9 @@ task clean_core_files {
 //    println(core_files_relative_path)
         delete(files(core_files_relative_path))
 
+        // delete src-gen
+//        delete(file('src-gen'))
+
         //now delete empty dirs
         def emptyDirs = []
         fileTree(".").visit {
@@ -91,7 +101,7 @@ task clean_core_files {
         print("Eventual_Server - Core files cleaned.")
     }
 }
-//
+////
 clean.dependsOn clean_core_files
 
 
