@@ -7,6 +7,7 @@ plugins {
 mainClassName = 'edu.msu.cse.eventual.server.MainClass'
 version = '0.0.1-SNAPSHOT'
 sourceCompatibility = '1.8'
+targetCompatibility = '1.8'
 description = "Eventual consistency server implementation"
 
 sourceSets {
@@ -22,24 +23,6 @@ repositories {
     mavenLocal()
 }
 
-
-compileJava{}
-
-jar {
-    manifest {
-        attributes ( 'Main-Class': mainClassName,
-                'Implementation-Title': project.description,
-                'Implementation-Version': project.version
-        )
-    }
-    archiveBaseName = project.name + '-all'
-    from {
-        configurations.runtimeClasspath.findAll { it.name.endsWith('jar') }.collect { zipTree(it) }
-    }
-    //with jar
-}
-
-
 dependencies {
     implementation files('../libs/Berkeley-DB/je-6.4.25.jar')
     implementation files('../libs/Protobuf/jaxb-api-2.3.1.wso2v2.jar')
@@ -52,42 +35,69 @@ dependencies {
     // implementation project(':DKVF_core')
 }
 
-
 task import_dkvf_core {
-    copy {
-        from('../DKVF_core/src')
-        into('src')
-    }
-}
-
-task clean_core_files {
-    def core_root = file("../DKVF_core").canonicalPath
-    def core_files = fileTree("../DKVF_core").filter { it.isFile()}.files.canonicalPath
-//    println(core_root)
-//    core_files.each { s -> println(s)}
-    def core_files_relative_path = core_files.collect { el -> el.replace(core_root+"/","")}
-    println(core_files_relative_path)
-    delete(files(core_files_relative_path))
-
-    //now delete empty dirs
-    def emptyDirs = []
-    fileTree(".").visit {
-        def File f = it.file
-        if (f.isDirectory() ) {
-            def children = project.fileTree(f).filter { it.isFile() }.files
-            if (children.size() == 0) {
-                emptyDirs << f
-            }
+    group 'setup'
+    description 'Copy the source files of DKVF_core into the src to brake circular dependencies'
+    doLast{
+        println 'Eventual_Server - Copying core files into local dir'
+        copy {
+            from('../DKVF_core/src')
+            into('src')
         }
     }
-    // reverse so that we do the deepest folders first
-    emptyDirs.reverseEach { it.delete() }
+}
+compileJava.dependsOn(import_dkvf_core)
+
+// configure jar
+jar {
+    manifest {
+        attributes ( 'Main-Class': mainClassName,
+                'Implementation-Title': project.description,
+                'Implementation-Version': project.version
+        )
+    }
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    archiveBaseName = project.name + '-all'
+    from {
+        configurations.runtimeClasspath.findAll { it.name.endsWith('jar') }.collect { zipTree(it) }
+    }
 }
 
-compileJava {
-    dependsOn import_dkvf_core
-}
 
-clean {
-    dependsOn clean_core_files
+
+
+task clean_core_files {
+    doLast {
+        def core_root = file("../DKVF_core").canonicalPath
+        def core_files = fileTree("../DKVF_core").filter { it.isFile() }.files.canonicalPath
+//    println(core_root)
+//    core_files.each { s -> println(s)}
+        def core_files_relative_path = core_files.collect { el -> el.replace(core_root + "/", "") }
+//    println(core_files_relative_path)
+        delete(files(core_files_relative_path))
+
+        //now delete empty dirs
+        def emptyDirs = []
+        fileTree(".").visit {
+            def File f = it.file
+            if (f.isDirectory()) {
+                def children = project.fileTree(f).filter { it.isFile() }.files
+                if (children.size() == 0) {
+                    emptyDirs << f
+                }
+            }
+        }
+        // reverse so that we do the deepest folders first
+        emptyDirs.reverseEach { it.delete() }
+        print("Eventual_Server - Core files cleaned.")
+    }
+}
+//
+clean.dependsOn clean_core_files
+
+
+
+tasks.withType(JavaCompile) {
+    options.compilerArgs << '-Xlint:unchecked'
+    options.deprecation = true
 }
