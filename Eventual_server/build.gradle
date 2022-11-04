@@ -2,6 +2,13 @@ plugins {
     id 'application'
     id 'java'
     id 'idea'
+
+//    id 'com.google.protobuf' version '0.8.17'
+    id 'com.google.protobuf' version '0.9.1'
+    //id 'checkstyle'
+    //id 'findbugs'
+    //id 'pmd'
+
 }
 
 mainClassName = 'edu.msu.cse.eventual.server.MainClass'
@@ -10,10 +17,38 @@ sourceCompatibility = '1.8'
 targetCompatibility = '1.8'
 description = "Eventual consistency server implementation"
 
+// update the version in our release process.
+def grpcVersion = '1.50.2' //original '1.5.0' // current version is 1.50.2 https://mvnrepository.com/artifact/io.grpc/grpc-protobuf
+def protobufVersion = '3.21.9' // original '3.4.0' // current version is 3.21.9 https://mvnrepository.com/artifact/com.google.protobuf/protobuf-java
+def protocVersion = protobufVersion
+
+
+protobuf {
+    protoc { artifact = "com.google.protobuf:protoc:${protocVersion}" }
+    plugins {
+        grpc { artifact = "io.grpc:protoc-gen-grpc-java:${grpcVersion}" }
+    }
+
+//    generateProtoTasks.generatedFilesBaseDir = 'src'
+    generatedFilesBaseDir = "$projectDir/src-gen/"
+
+
+    generateProtoTasks {
+        ofSourceSet('mainnn')
+        all()*.plugins {
+            grpc {
+            }
+        }
+    } //generateProtoTasks
+}// protobuf
+
 sourceSets {
     main {
+        proto {
+            srcDirs = ['src/protos']
+        }
         java {
-            srcDirs = ['src']
+            srcDirs = ['src', 'src-gen']
         }
     }
 }
@@ -26,7 +61,7 @@ repositories {
 dependencies {
     implementation files('../libs/Berkeley-DB/je-6.4.25.jar')
     implementation files('../libs/Protobuf/jaxb-api-2.3.1.wso2v2.jar')
-    implementation files('../libs/Protobuf/protobuf-java-3.4.0.jar')
+    implementation files('../libs/Protobuf/protobuf-java-3.21.9.jar')
     implementation files('../libs/YCSB/htrace-core4-4.1.0-incubating.jar')
     implementation files('../libs/YCSB/HdrHistogram-2.1.4.jar')
     implementation files('../libs/YCSB/core-0.14.0-SNAPSHOT.jar')
