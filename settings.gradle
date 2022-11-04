@@ -1,4 +1,5 @@
 rootProject.name = "DKVF"
 
-//include 'DKVF_core'
+include 'DKVF_core'
 include 'Eventual_server'
+include 'Eventual_client'
