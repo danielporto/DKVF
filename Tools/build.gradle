@@ -1,0 +1,91 @@
+plugins {
+    id 'application'
+    id 'java'
+    id 'idea'
+
+    //id 'checkstyle'
+    //id 'findbugs'
+    //id 'pmd'
+
+}
+
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '1.8'
+targetCompatibility = '1.8'
+description = "DKVF tools"
+
+sourceSets {
+    main {
+        java {
+            srcDirs = ['src']
+        }
+    }
+}
+
+repositories {
+    mavenCentral()
+    mavenLocal()
+}
+
+dependencies {
+    implementation files('libs/jgoodies-common-1.8.0.jar')
+    implementation files('libs/htrace-core4-4.1.0-incubating.jar')
+    implementation files('libs/HdrHistogram-2.1.4.jar')
+    implementation files('libs/log4j-1.2.17.jar')
+    implementation files('libs/je-6.4.25.jar')
+    implementation files('libs/core-0.14.0-SNAPSHOT.jar')
+    implementation files('libs/protobuf-java-3.21.9.jar')
+    implementation files('libs/jackson-core-asl-1.9.4.jar')
+    implementation files('libs/jsch-0.1.55.jar')
+    implementation files('libs/jgoodies-forms-1.8.0.jar')
+    implementation files('libs/jackson-mapper-asl-1.9.13.jar')
+    implementation files('libs/miglayout-swing-5.3.jar')
+    implementation project(':Eventual_client')
+}
+
+
+
+// Build clusterDesigner Tool
+jar {
+    manifest {
+        attributes ( 'Main-Class': 'edu.msu.cse.dkvf.clusterDesigner.ClusterDesignerApplication',
+                'Implementation-Title': 'Cluster Designer GUI',
+                'Implementation-Version': project.version
+        )
+    }
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    archiveBaseName = 'ClusterDesigner'+project.name
+    from {
+        configurations.runtimeClasspath.findAll { it.name.endsWith('jar') }.collect { zipTree(it) }
+    }
+}
+
+// Build clusterManager Tool
+task clijar(type: Jar) {
+    manifest {
+        attributes ( 'Main-Class': 'edu.msu.cse.dkvf.clusterManager.UI',
+                'Implementation-Title': 'Cluster Manager tool',
+                'Implementation-Version': project.version
+        )
+    }
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    archiveBaseName = 'ClusterManager'+project.name
+    from {
+        configurations.runtimeClasspath.findAll { it.name.endsWith('jar') }.collect { zipTree(it) }
+    }
+}
+jar.dependsOn(clijar)
+
+
+tasks.withType(JavaCompile) {
+    options.compilerArgs << '-Xlint:unchecked'
+    options.deprecation = true
+}
+
+tasks.withType(Tar) {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+tasks.withType(Zip){
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
