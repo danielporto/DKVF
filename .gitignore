@@ -1,3 +1,11 @@
+# ignore bin dirs
+CausalSpartan_server/bin/
+DKVF_core/bin/
+GentleRain_server/bin/
+Orion_client/bin/
+Orion_server/bin/
+Tools/bin/
+
 
 # ignore the DKVF Core src in protocol implementations
 **/src/edu/msu/cse/dkvf/controlMetadata
