@@ -2,4 +2,5 @@ rootProject.name = "DKVF"
 
 // include 'DKVF_core'
 include 'Eventual_server', 'Eventual_client'
-include 'Tools'
+include 'COPS_server', 'COPS_client'
+//include 'Tools'
