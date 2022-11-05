@@ -48,13 +48,14 @@ dependencies {
 // Build clusterDesigner Tool
 jar {
     manifest {
-        attributes ( 'Main-Class': 'edu.msu.cse.dkvf.clusterDesigner.ClusterDesignerApplication',
-                'Implementation-Title': 'Cluster Designer GUI',
+        attributes ( 'Main-Class': 'edu.msu.cse.dkvf.clusterManager.UI',
+                'Implementation-Title': 'Cluster Manager tool',
+
                 'Implementation-Version': project.version
         )
     }
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    archiveBaseName = 'ClusterDesigner'+project.name
+    archiveBaseName = 'ClusterManager'+project.name
     from {
         configurations.runtimeClasspath.findAll { it.name.endsWith('jar') }.collect { zipTree(it) }
     }
@@ -63,13 +64,16 @@ jar {
 // Build clusterManager Tool
 task clijar(type: Jar) {
     manifest {
-        attributes ( 'Main-Class': 'edu.msu.cse.dkvf.clusterManager.UI',
-                'Implementation-Title': 'Cluster Manager tool',
+        attributes (
+                'Main-Class': 'edu.msu.cse.dkvf.clusterDesigner.ClusterDesignerApplication',
+                'Implementation-Title': 'Cluster Designer GUI',
+
                 'Implementation-Version': project.version
         )
     }
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    archiveBaseName = 'ClusterManager'+project.name
+
+    archiveBaseName = 'ClusterDesigner'+project.name
     from {
         configurations.runtimeClasspath.findAll { it.name.endsWith('jar') }.collect { zipTree(it) }
     }
