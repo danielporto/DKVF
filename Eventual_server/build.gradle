@@ -74,7 +74,7 @@ task import_dkvf_core {
     group 'setup'
     description 'Copy the source files of DKVF_core into the src to brake circular dependencies'
     doLast{
-        println 'Eventual_Server - Copying core files into local dir'
+        println 'Eventual_server - Copying core files into local dir'
         copy {
             from('../DKVF_core/src')
             into('src')

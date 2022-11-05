@@ -34,7 +34,7 @@ dependencies {
 //     implementation project(':DKVF_core')
 }
 
-task import_eventual_server_core {
+task import_server_core {
     group 'setup'
     description 'Copy the source files of Eventual_server/DKVF_core into the src to brake circular dependencies'
     doLast{
@@ -52,7 +52,7 @@ task import_eventual_server_core {
 
     }
 }
-compileJava.dependsOn(import_eventual_server_core)
+compileJava.dependsOn(import_server_core)
 
 // configure jar
 jar {
