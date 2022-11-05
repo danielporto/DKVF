@@ -1,0 +1,115 @@
+plugins {
+    id 'java'
+    id 'idea'
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+}
+//mainClassName = 'edu.msu.cse.gentleRain.client.GentleRain_client'
+version = '0.0.1-SNAPSHOT'
+description = "GentleRain consistency client implementation"
+
+sourceSets {
+    main {
+        java {
+            srcDirs = ['src','src-gen']
+        }
+    }
+}
+
+repositories {
+    mavenCentral()
+    mavenLocal()
+}
+
+dependencies {
+    implementation files('../libs/Berkeley-DB/je-6.4.25.jar')
+    implementation files('../libs/Protobuf/jaxb-api-2.3.1.wso2v2.jar')
+    implementation files('../libs/Protobuf/protobuf-java-3.21.9.jar')
+    implementation files('../libs/YCSB/htrace-core4-4.1.0-incubating.jar')
+    implementation files('../libs/YCSB/HdrHistogram-2.1.4.jar')
+    implementation files('../libs/YCSB/core-0.14.0-SNAPSHOT.jar')
+    implementation files('../libs/YCSB/jackson-core-asl-1.9.4.jar')
+    implementation files('../libs/YCSB/jackson-mapper-asl-1.9.13.jar')
+//    implementation project(':Eventual_server')
+}
+
+task import_server_core {
+    group 'setup'
+    description 'Copy the source files of GentleRain_server/DKVF_core into the src to brake circular dependencies'
+    doLast{
+        println 'GentleRain_client - Copying core files into local dir'
+        // copy the core (which includes the XSDs
+        copy {
+            from('../DKVF_core/src')
+            into('src')
+        }
+        // copy the core updated, which includes the Metadata generated from protobuf
+        copy {
+            from('../GentleRain_server/src-gen')
+            into('src-gen')
+        }
+
+    }
+}
+compileJava.dependsOn(import_server_core)
+
+// configure jar
+jar {
+    manifest {
+//        attributes ( 'Main-Class': mainClassName,
+//                'Implementation-Title': project.description,
+//                'Implementation-Version': project.version
+//        )
+    }
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    archiveBaseName = project.name + '-all'
+    from {
+        configurations.runtimeClasspath.findAll { it.name.endsWith('jar') }.collect { zipTree(it) }
+    }
+}
+
+
+
+
+task clean_core_files {
+    doLast {
+        def core_root = file("../DKVF_core").canonicalPath
+        def core_files = fileTree("../DKVF_core").filter { it.isFile() }.files.canonicalPath
+//    println(core_root)
+//    core_files.each { s -> println(s)}
+        def core_files_relative_path = core_files.collect { el -> el.replace(core_root + "/", "") }
+//    println(core_files_relative_path)
+        delete(files(core_files_relative_path))
+
+        // delete src-gen
+//        delete(file('src-gen'))
+
+        //now delete empty dirs
+        def emptyDirs = []
+        fileTree(".").visit {
+            def File f = it.file
+            if (f.isDirectory()) {
+                def children = project.fileTree(f).filter { it.isFile() }.files
+                if (children.size() == 0) {
+                    emptyDirs << f
+                }
+            }
+        }
+        // reverse so that we do the deepest folders first
+        emptyDirs.reverseEach { it.delete() }
+        print("GentleRain_server - Core files cleaned.")
+    }
+}
+////
+clean.dependsOn clean_core_files
+
+
+
+tasks.withType(JavaCompile) {
+    options.compilerArgs << '-Xlint:unchecked'
+    options.deprecation = true
+//    options.release = 8
+}
