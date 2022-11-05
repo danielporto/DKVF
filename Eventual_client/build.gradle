@@ -5,8 +5,6 @@ plugins {
 
 //mainClassName = 'edu.msu.cse.eventual.client.Eventual_client'
 version = '0.0.1-SNAPSHOT'
-sourceCompatibility = '1.8'
-targetCompatibility = '1.8'
 description = "Eventual consistency client implementation"
 
 sourceSets {
@@ -109,4 +107,5 @@ clean.dependsOn clean_core_files
 tasks.withType(JavaCompile) {
     options.compilerArgs << '-Xlint:unchecked'
     options.deprecation = true
+    options.release = 8
 }
