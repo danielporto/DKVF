@@ -10,7 +10,10 @@ plugins {
     //id 'pmd'
 
 }
-
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+}
 mainClassName = 'edu.msu.cse.eventual.server.MainClass'
 version = '0.0.1-SNAPSHOT'
 description = "Eventual consistency server implementation"
@@ -32,7 +35,6 @@ protobuf {
 
 
     generateProtoTasks {
-        ofSourceSet('mainnn')
         all()*.plugins {
             grpc {
             }
@@ -80,6 +82,7 @@ task import_dkvf_core {
     }
 }
 compileJava.dependsOn(import_dkvf_core)
+compileJava.dependsOn(generateProto)
 
 // configure jar
 jar {
@@ -122,7 +125,7 @@ task clean_core_files {
         }
         // reverse so that we do the deepest folders first
         emptyDirs.reverseEach { it.delete() }
-        print("Eventual_Server - Core files cleaned.")
+        print("Eventual_server - Core files cleaned.")
     }
 }
 //
@@ -133,5 +136,5 @@ clean.dependsOn clean_core_files
 tasks.withType(JavaCompile) {
     options.compilerArgs << '-Xlint:unchecked'
     options.deprecation = true
-    options.release = 8
+//    options.release = 8
 }

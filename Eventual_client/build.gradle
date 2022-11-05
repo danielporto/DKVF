@@ -3,6 +3,10 @@ plugins {
     id 'idea'
 }
 
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+}
 //mainClassName = 'edu.msu.cse.eventual.client.Eventual_client'
 version = '0.0.1-SNAPSHOT'
 description = "Eventual consistency client implementation"
@@ -29,7 +33,7 @@ dependencies {
     implementation files('../libs/YCSB/core-0.14.0-SNAPSHOT.jar')
     implementation files('../libs/YCSB/jackson-core-asl-1.9.4.jar')
     implementation files('../libs/YCSB/jackson-mapper-asl-1.9.13.jar')
-//     implementation project(':DKVF_core')
+//    implementation project(':Eventual_server')
 }
 
 task import_server_core {
@@ -96,7 +100,7 @@ task clean_core_files {
         }
         // reverse so that we do the deepest folders first
         emptyDirs.reverseEach { it.delete() }
-        print("Eventual_Server - Core files cleaned.")
+        print("Eventual_server - Core files cleaned.")
     }
 }
 ////
@@ -107,5 +111,5 @@ clean.dependsOn clean_core_files
 tasks.withType(JavaCompile) {
     options.compilerArgs << '-Xlint:unchecked'
     options.deprecation = true
-    options.release = 8
+//    options.release = 8
 }
