@@ -19,6 +19,9 @@ sourceSets {
         java {
             srcDirs = ['src']
         }
+        resources {
+            srcDirs += ['resources']
+        }
     }
 }
 
@@ -57,7 +60,7 @@ jar {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     archiveBaseName = 'ClusterManager'+project.name
     from {
-        configurations.runtimeClasspath.findAll { it.name.endsWith('jar') }.collect { zipTree(it) }
+        configurations.runtimeClasspath.findAll { it.name.endsWith('jar') || it.name.endsWith("xsd") }.collect { zipTree(it) }
     }
 }
 
