@@ -1,4 +1,5 @@
 # ignore bin dirs
+generated_files/
 experiments/
 CausalSpartan_server/bin/
 DKVF_core/bin/
@@ -6,9 +7,12 @@ GentleRain_server/bin/
 GentleRain_client/bin/
 Orion_client/bin/
 Orion_server/bin/
-COPS_cluent/bin/
+COPS_server/bin/
+COPS_client/bin/
+Eventual_server/bin/
 Eventual_client/bin/
 Tools/bin/
+.vscode/
 
 # ignore the DKVF Core src in protocol implementations
 **/src/edu/msu/cse/dkvf/controlMetadata

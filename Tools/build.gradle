@@ -39,7 +39,7 @@ dependencies {
     implementation files('libs/core-0.14.0-SNAPSHOT.jar')
     implementation files('libs/protobuf-java-3.21.9.jar')
     implementation files('libs/jackson-core-asl-1.9.4.jar')
-    implementation files('libs/jsch-0.1.55.jar')
+    implementation files('libs/jsch-0.2.4.jar') // use alternative implemetation from https://github.com/mwiede/jsch which supports new openssh keys
     implementation files('libs/jgoodies-forms-1.8.0.jar')
     implementation files('libs/jackson-mapper-asl-1.9.13.jar')
     implementation files('libs/miglayout-swing-5.3.jar')
