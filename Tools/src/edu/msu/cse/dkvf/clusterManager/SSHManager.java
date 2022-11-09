@@ -108,12 +108,28 @@ public class SSHManager {
 		((ChannelExec) channel).setCommand(command);
 		InputStream commandOutput = channel.getInputStream();
 		channel.connect();
-		int readByte = commandOutput.read();
+//		int readByte = commandOutput.read();
 
-		while (readByte != 0xffffffff) {
-			outputBuffer.append((char) readByte);
-			readByte = commandOutput.read();
+//		while (readByte != 0xffffffff) {
+//			outputBuffer.append((char) readByte);
+//			readByte = commandOutput.read();
+//		}
+
+		byte[] tmp=new byte[1024];
+		while(true){
+			while(commandOutput.available()>0){
+				int i=commandOutput.read(tmp, 0, 1024);
+				if(i<0)break;
+				outputBuffer.append(new String(tmp, 0, i));
+//				System.out.print(new String(tmp, 0, i));
+			}
+			if(channel.isClosed()){
+				System.out.println("exit-status: "+channel.getExitStatus());
+				break;
+			}
+			try{Thread.sleep(1000);}catch(Exception ee){}
 		}
+
 
 		channel.disconnect();
 
