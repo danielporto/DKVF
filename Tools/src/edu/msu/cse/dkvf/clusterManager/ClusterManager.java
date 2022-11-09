@@ -91,6 +91,21 @@ public class ClusterManager extends Manager {
 		}
 	}
 
+	public boolean testCmd(String cmd){
+		try{
+			for (Map.Entry<String, ServerNode> nodeMap : cr.nodes.entrySet()) {
+				ServerNode node = nodeMap.getValue();
+				node.connect(strictHostKeyChecking);
+				String s = node.sshManager.sendCommandGetResponse(cmd);
+				System.out.println("ClusterManager.testCmd output:" + s);
+			}
+		}catch (Exception e) {
+			System.out.println("ClusterManager.testCmd failed: " + e.getMessage());
+			e.printStackTrace();
+			return false;
+		}
+		return true;
+	}
 	public boolean startNode(String id) {
 		return startNode(cr.nodes.get(id));
 	}
@@ -154,7 +169,7 @@ public class ClusterManager extends Manager {
 		String serverConfigFileName = MessageFormat.format("server_{0}", node.id);
 
 		String command1 = MessageFormat.format("cd {0}", node.workingDirectory);
-		String command2 = MessageFormat.format("java -jar {0} {1}", node.jarFileName, serverConfigFileName);
+		String command2 = MessageFormat.format("$HOME/.asdf/installs/java/zulu-8.54.0.21/zulu-8.jdk/Contents/Home/bin/java -jar {0} {1}", node.jarFileName, serverConfigFileName);
 
 		String separator = ";";
 

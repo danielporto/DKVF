@@ -16,6 +16,17 @@ public class UI {
 	static Scanner scanner;
 
 	public static void main(String args[]) {
+		if(args.length> 1){
+			System.out.println("UI.main command: " + args[1]);
+			if(args[1].equals("testCmd")){
+				testCmd(args);
+			}
+			else {
+				System.out.println("UI.main: command not recognized");
+			}
+			exit();
+		}
+
 		try {
 			byte[] encoded = Files.readAllBytes(Paths.get("banner.txt"));
 			String banner = new String(encoded);
@@ -119,9 +130,19 @@ public class UI {
 		scanner.close();
 	}
 
+	private static void testCmd(String[] commandParts ){
+		try{
+			clusterManager.loadCluster(commandParts[0]);
+			String.join(" ", commandParts);
+			String cmd = String.join(" ", Arrays.copyOfRange(commandParts,2,commandParts.length));
+			clusterManager.testCmd(cmd);
+		} catch (Exception e){
+			System.out.println("UI.testCmd error:"+ e.getMessage());
+		}
+	}
 	private static void killJavaExperiment(String[] commandParts) {
 		if (experimentManager.killJava())
-			System.out.println("Kill java ran sucessfully on cluster nodes.");
+			System.out.println("Kill java ran successfully on cluster nodes.");
 		else
 			System.out.println("Kill java failed. Type \"read_experiment_error\" to see the error.");
 		
@@ -130,7 +151,7 @@ public class UI {
 
 	private static void killJavaCluster(String[] commandParts) {
 		if (clusterManager.killJava())
-			System.out.println("Kill java ran sucessfully on experiment nodes.");
+			System.out.println("Kill java ran successfully on experiment nodes.");
 		else
 			System.out.println("Starting the cluster failed. Type \"read_cluster_error\" to see the error.");
 		
