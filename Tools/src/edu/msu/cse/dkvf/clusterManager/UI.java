@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Scanner;
 
 import edu.msu.cse.dkvf.clusterManager.ClusterManager.ServerStatus;
+import org.apache.commons.cli.*;
 
 public class UI {
 	static ClusterManager clusterManager = new ClusterManager(System.out);
@@ -16,18 +17,33 @@ public class UI {
 	static Scanner scanner;
 
 	public static void main(String args[]) {
-		if(args.length> 1){
-			System.out.println("UI.main command: " + args[1]);
-			if(args[1].equals("testCmd")){
-				testCmd(args);
-			}
-			else {
-				System.out.println("UI.main: command not recognized");
-			}
-			exit();
-		}
+		Options options = new Options();
+		options.addOption(new Option("c", "command", true, "Run a command remotelly"));
+		options.addOption(new Option("s", "settings", true, "path to the cluster settings file"));
+		options.addOption(new Option("j", "jdkpath", true, "path to jdk"));
+
+		CommandLine cmd;
+		CommandLineParser parser = new BasicParser();
+		HelpFormatter helper = new HelpFormatter();
 
 		try {
+			cmd = parser.parse(options, args);
+			if(cmd.hasOption("j")) {
+				Manager.remoteJavaBin=cmd.getOptionValue("j");
+				if(! Manager.remoteJavaBin.endsWith("/")){
+					Manager.remoteJavaBin+="/";
+				}
+			}
+			if(cmd.hasOption("c")) {
+				if (!cmd.hasOption("s")) {
+					System.out.println("Cluster file path (-s) is required");
+					exit();
+				}
+				System.out.println("run command remotely: "+cmd.getOptionValue("settings")+" "+cmd.getOptionValue("command")+ " 2>&1  | cat");
+				testCmd(cmd.getOptionValue("settings"),cmd.getOptionValue("command") + " 2>&1  | cat");
+				exit();
+			}
+
 			byte[] encoded = Files.readAllBytes(Paths.get("banner.txt"));
 			String banner = new String(encoded);
 
@@ -37,6 +53,9 @@ public class UI {
 			System.out.println("-------------------------------------");
 			System.out.println("-----------DKVF ClusterManager-------");
 			System.out.println("-------------------------------------");
+		} catch (ParseException e) {
+			System.out.println("UI.main: Option not recognized. exit");
+			exit();
 		}
 		System.out.println("");
 
@@ -130,12 +149,10 @@ public class UI {
 		scanner.close();
 	}
 
-	private static void testCmd(String[] commandParts ){
+	private static void testCmd(String cluster, String command){
 		try{
-			clusterManager.loadCluster(commandParts[0]);
-			String.join(" ", commandParts);
-			String cmd = String.join(" ", Arrays.copyOfRange(commandParts,2,commandParts.length));
-			clusterManager.testCmd(cmd);
+			clusterManager.loadCluster(cluster);
+			clusterManager.testCmd(command);
 		} catch (Exception e){
 			System.out.println("UI.testCmd error:"+ e.getMessage());
 		}

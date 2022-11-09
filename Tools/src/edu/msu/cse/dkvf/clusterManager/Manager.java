@@ -7,6 +7,7 @@ import java.io.StringWriter;
 public class Manager {
 	private String errorMessage;
 	private PrintStream out;
+	public static String remoteJavaBin="";
 	
 	public Manager (PrintStream out){
 		this.out = out;
