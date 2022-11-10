@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<experiment>
+    <name>cops_experiment</name>
+    <defaults/>
+    <clients>
+        <client id="Client_1" ip="127.0.0.1">
+            <config>
+                <os>macos</os>
+                <client_jar_file>/Users/dporto/devel/DKVF/COPS_client/build/libs/COPS_client-all-0.0.1-SNAPSHOT.jar</client_jar_file>
+                <client_class_name>edu.msu.cse.eventual.client.COPSClient</client_class_name>
+                <workload>/Users/dporto/devel/DKVF/Tools/properties.txt</workload>
+                <username>dporto</username>
+                <key>/Users/dporto/.ssh/id_rsa_inesc_cluster_dporto</key>
+                <working_directory>/Users/dporto/devel/DKVF/experiments/cops/client_1</working_directory>
+                <protocol_properties>
+                    <property key="num_of_partitions" value="1"/>
+                    <property key="dc_id" value="1"/>
+                </protocol_properties>
+            </config>
+            <connect_to>
+                <server id="1_0" ip="127.0.0.1" port="3000"/>
+            </connect_to>
+        </client>
+        <client id="Client_0" ip="127.0.0.1">
+            <config>
+                <os>macos</os>
+                <client_jar_file>/Users/dporto/devel/DKVF/COPS_client/build/libs/COPS_client-all-0.0.1-SNAPSHOT.jar</client_jar_file>
+                <client_class_name>edu.msu.cse.cops.client.COPSClient</client_class_name>
+                <workload>/Users/dporto/devel/DKVF/Tools/properties.txt</workload>
+                <username>dporto</username>
+                <key>/Users/dporto/.ssh/id_rsa_inesc_cluster_dporto</key>
+                <working_directory>/Users/dporto/devel/DKVF/experiments/cops/client_0</working_directory>
+                <protocol_properties>
+                    <property key="num_of_partitions" value="1"/>
+                    <property key="dc_id" value="0"/>
+                </protocol_properties>
+            </config>
+            <connect_to>
+                <server id="0_0" ip="127.0.0.1" port="2000"/>
+            </connect_to>
+        </client>
+    </clients>
+    <workload_variations/>
+</experiment>
