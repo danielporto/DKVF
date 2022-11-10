@@ -16,6 +16,9 @@ sourceSets {
         java {
             srcDirs = ['src','src-gen']
         }
+        resources {
+            srcDirs += ['resources']
+        }
     }
 }
 
@@ -67,7 +70,7 @@ jar {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     archiveBaseName = project.name + '-all'
     from {
-        configurations.runtimeClasspath.findAll { it.name.endsWith('jar') }.collect { zipTree(it) }
+        configurations.runtimeClasspath.findAll { it.name.endsWith('jar') || it.name.endsWith("xsd")  }.collect { zipTree(it) }
     }
 }
 
