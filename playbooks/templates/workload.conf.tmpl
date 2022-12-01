@@ -1,0 +1,17 @@
+fieldlength=16
+operationcount={{ycsb_operations}}
+recordcount={{ycsb_database_size}}
+workload=edu.msu.cse.dkvf.ycsbWorkload.DKVFWorkload
+
+readallfields=false
+
+readproportion=0.5
+updateproportion=0
+insertproportion=0.5
+ampinsertproportion=0
+rotxproportion = 0
+
+threadcount={{ycsb_threads_per_client}}
+
+ampfactor=10
+requestdistribution=zipfian

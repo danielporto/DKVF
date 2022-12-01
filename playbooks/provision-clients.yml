@@ -1,0 +1,46 @@
+- hosts: clients
+  become: no
+  any_errors_fatal: true
+  gather_facts: no 
+  vars_files:
+      - vars.yml
+      - topology.yml
+
+  tasks:
+
+    - name: Create remote client configuration folder
+      file: 
+        path: "{{ item }}"
+        state: directory
+        mode: "g+rw"
+      with_items:
+        - "{{ default_install_dir }}/{{ protocol }}/{{inventory_hostname}}"      
+
+    - name: Upload client jar to remote nodes
+      copy:
+        src: "../{{ protocol }}_client/build/libs/{{ protocol }}_client-all-0.0.1-SNAPSHOT.jar"
+        dest: "{{ default_install_dir }}/{{ protocol }}/{{inventory_hostname}}"
+
+    - name: Deploy client configuration
+      template:
+        src: templates/client.conf.tmpl
+        dest: "{{ default_install_dir }}/{{ protocol }}/{{inventory_hostname}}/client{{ topology['clients'][inventory_hostname].id }}.conf"
+        mode: "u=r,g=r,o=r"
+
+    - name: Deploy workload configuration
+      template:
+        src: templates/workload.conf.tmpl
+        dest: "{{ default_install_dir }}/{{ protocol }}/{{inventory_hostname}}/workload.conf"
+        mode: "u=r,g=r,o=r"
+
+    - name: Deploy client loader script
+      template:
+        src: templates/runClientLoader.sh.tmpl
+        dest: "{{ default_install_dir }}/{{ protocol }}/{{inventory_hostname}}/runClientLoader{{ topology['clients'][inventory_hostname].id }}.sh"
+        mode: "u=rx,g=rx,o=rx"
+
+    - name: Deploy client run script
+      template:
+        src: templates/runClient.sh.tmpl
+        dest: "{{ default_install_dir }}/{{ protocol }}/{{inventory_hostname}}/runClient{{ topology['clients'][inventory_hostname].id }}.sh"
+        mode: "u=rx,g=rx,o=rx"

@@ -1,0 +1,10 @@
+#!/bin/sh
+{{ java_path }}/java -cp \
+    {{ protocol }}_client-all-0.0.1-SNAPSHOT.jar \
+    com.yahoo.ycsb.Client \
+    -t -db edu.msu.cse.dkvf.ycsbDriver.DKVFDriver \
+    -P workload.conf \
+    -p clientClassName={{ clientClassName[protocol] }} \ 
+    -p clientConfigFile=client{{ topology['clients'][inventory_hostname].id }}.conf  \
+                > client{{topology['clients'][inventory_hostname].id}}.result \
+                2> client{{topology['clients'][inventory_hostname].id}}.error
