@@ -18,11 +18,11 @@ public class HubComponent extends Component {
 	Map<String, HubComponent> hubs = new HashMap();
 
 	public HubComponent() {
-		super("resources/hub.png", "Hub_" + numberOfHubComponent++);
+		super("hub.png", "Hub_" + numberOfHubComponent++);
 	}
 
 	public HubComponent(String id) {
-		super("resources/hub.png", id);
+		super("hub.png", id);
 	}
 
 	public void connected(Component component) {

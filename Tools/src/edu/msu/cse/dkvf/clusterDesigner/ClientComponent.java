@@ -9,7 +9,7 @@ import javax.swing.JFrame;
 public class ClientComponent extends Component {
 
 	public ClientComponent(String id) {
-		super("resources/client.png", id);
+		super("client.png", id);
 		parameters = new EditExperimentParametersFrame(id, false, this);
 		parameters.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		parameters.setTitle("Experiment Parameters - " + id);

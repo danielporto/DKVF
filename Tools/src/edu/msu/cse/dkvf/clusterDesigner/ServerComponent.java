@@ -9,7 +9,7 @@ import javax.swing.JFrame;
 public class ServerComponent extends Component {
 	
 	public ServerComponent(String id) {
-		super("resources/server.png", id);
+		super("server.png", id);
 		parameters = new EditServerParametersFrame(id, false, this);
 		parameters.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		parameters.setTitle("Server Parameters - " + id);

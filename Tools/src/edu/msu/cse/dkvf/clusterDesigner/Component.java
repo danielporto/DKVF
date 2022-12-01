@@ -1,25 +1,11 @@
 package edu.msu.cse.dkvf.clusterDesigner;
 
-import java.awt.Color;
-import java.awt.Graphics;
-import java.awt.Image;
-import java.awt.Rectangle;
+import javax.swing.*;
+import java.awt.*;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
-import java.io.File;
 import java.io.Serializable;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.imageio.ImageIO;
-import javax.swing.Icon;
-import javax.swing.ImageIcon;
-import javax.swing.JComponent;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.border.LineBorder;
 
 public class Component extends JLabel implements Serializable {
 
@@ -49,7 +35,7 @@ public class Component extends JLabel implements Serializable {
 		} catch (Exception e) {
 			// TODO: handle exception
 		}*/
-		URL url = Component.class.getResource(imageAddress);
+		URL url = Component.class.getResource("/"+imageAddress);
 		ImageIcon icon = new ImageIcon(url);
 
 		//Icon icon = new ImageIcon(image);

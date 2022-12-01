@@ -2,6 +2,7 @@ plugins {
     id 'application'
     id 'java'
     id 'idea'
+//    id("com.github.bjornvester.xjc") version "1.6.0"
 
     //id 'checkstyle'
     //id 'findbugs'
@@ -14,14 +15,25 @@ sourceCompatibility = '1.8'
 targetCompatibility = '1.8'
 description = "DKVF tools"
 
+//xjc {
+//    xsdDir = file("$projectDir/resources/XSDs")
+//    xsdFiles = project.files(
+//            xsdDir.file("Config.xsd"),
+//    )
+//
+//    defaultPackage = "edu.msu.cse.dkvf.config"
+//    outputJavaDir = file("$projectDir/src-gen")
+//}
+
 sourceSets {
     main {
         java {
-            srcDirs = ['src']
+            srcDirs = ['src', 'src-gen']
         }
         resources {
-            srcDirs += ['resources']
+            srcDirs += ['resources', 'src/edu/msu/cse/dkvf/clusterDesigner/resources']
         }
+
     }
 }
 
@@ -47,26 +59,25 @@ dependencies {
     implementation project(':Eventual_client')
 }
 
-
-
-// Build clusterDesigner Tool
-jar {
+// Build clusterManager Tool
+task clijar(type: Jar) {
     manifest {
-        attributes ( 'Main-Class': 'edu.msu.cse.dkvf.clusterManager.UI',
+        attributes (
+                'Main-Class': 'edu.msu.cse.dkvf.clusterManager.UI',
                 'Implementation-Title': 'Cluster Manager tool',
-
                 'Implementation-Version': project.version
         )
     }
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     archiveBaseName = 'ClusterManager'+project.name
-    from {
+    from sourceSets.main.output // all compiled files
+    from { //all dependency jars
         configurations.runtimeClasspath.findAll { it.name.endsWith('jar') || it.name.endsWith("xsd") }.collect { zipTree(it) }
     }
 }
 
-// Build clusterManager Tool
-task clijar(type: Jar) {
+// Build clusterDesigner Tool
+task guijar(type: Jar) {
     manifest {
         attributes (
                 'Main-Class': 'edu.msu.cse.dkvf.clusterDesigner.ClusterDesignerApplication',
@@ -76,13 +87,17 @@ task clijar(type: Jar) {
         )
     }
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-
     archiveBaseName = 'ClusterDesigner'+project.name
-    from {
+    from sourceSets.main.output // all compiled files
+    from (sourceSets.main.resources) {
+        findAll { it.path.endsWith('png') }.collect // all resource files
+    }
+
+    from { //all dependency jars
         configurations.runtimeClasspath.findAll { it.name.endsWith('jar') }.collect { zipTree(it) }
     }
 }
-jar.dependsOn(clijar)
+jar.dependsOn(guijar,clijar)
 
 
 tasks.withType(JavaCompile) {
@@ -97,3 +112,4 @@ tasks.withType(Tar) {
 tasks.withType(Zip){
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
+
