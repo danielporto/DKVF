@@ -1,0 +1,14 @@
+- hosts: all
+  become: no
+  any_errors_fatal: true
+  gather_facts: no # required for detecting os
+  vars_files:
+      - vars.yml
+
+  tasks:
+    - name: remove environment folder
+      file: 
+        path: "{{ item }}"
+        state: absent
+      with_items:
+        - "{{ default_install_dir }}/{{ protocol }}"      
