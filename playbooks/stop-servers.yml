@@ -1,0 +1,29 @@
+---
+- hosts: servers
+  become: no
+  any_errors_fatal: true
+  gather_facts: no
+  vars_files:
+      - vars.yml
+      - topology.yml
+
+  tasks:
+  - name: Processes to stop
+    ansible.builtin.shell: |
+      ps -ax | grep -E '{{protocol}}_server' | grep -v grep | awk '{print $1}' | tr '\n' ' '     
+    args:
+      executable: /bin/bash
+    register: stop_processes 
+
+  - name: IDs of processes to stop
+    debug: 
+      msg:  "{{ stop_processes.stdout }}"
+
+  - name: Stop datastore servers
+    ansible.builtin.shell: |
+      kill -9 {{stop_processes.stdout}}
+    args:
+      executable: /bin/bash
+    when: stop_processes.stdout | length > 0
+
+

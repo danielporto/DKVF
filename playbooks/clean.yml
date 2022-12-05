@@ -10,5 +10,6 @@
       file: 
         path: "{{ item }}"
         state: absent
+      ignore_errors: true
       with_items:
         - "{{ default_install_dir }}/{{ protocol }}"      

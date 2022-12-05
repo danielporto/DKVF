@@ -1,0 +1,30 @@
+---
+- hosts: servers
+  become: no
+  any_errors_fatal: true
+  gather_facts: no
+  vars_files:
+      - vars.yml
+      - topology.yml
+
+  tasks:
+
+
+  - name: Check if processes are already started
+    ansible.builtin.shell: |
+      ps -ax | grep -E '{{protocol}}_server' | grep "{{ topology['servers'][inventory_hostname].id }}" | grep -v grep | awk '{print $1}' | tr '\n' ' '          
+    args:
+      executable: /bin/bash
+    register: start_processes 
+
+  - name: IDs of processes to skip starting
+    debug: 
+      msg:  "{{ start_processes.stdout }}"
+
+  - name: Start datastore servers
+    ansible.builtin.shell: |
+      nohup {{ default_install_dir }}/{{ protocol }}/{{inventory_hostname}}/runServer{{ topology['servers'][inventory_hostname].id }}.sh &
+    args:
+      executable: /bin/bash
+      chdir: "{{ default_install_dir }}/{{ protocol }}/{{inventory_hostname}}"
+    when: start_processes.stdout | length == 0
