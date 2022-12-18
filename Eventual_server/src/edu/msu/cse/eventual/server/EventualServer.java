@@ -5,10 +5,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import com.google.protobuf.GeneratedMessageV3;
 import edu.msu.cse.dkvf.ClientMessageAgent;
 import edu.msu.cse.dkvf.DKVFServer;
 import edu.msu.cse.dkvf.Storage.StorageStatus;
 import edu.msu.cse.dkvf.config.ConfigReader;
+import edu.msu.cse.dkvf.metadata.Metadata;
 import edu.msu.cse.dkvf.metadata.Metadata.ClientReply;
 import edu.msu.cse.dkvf.metadata.Metadata.GetMessage;
 import edu.msu.cse.dkvf.metadata.Metadata.GetReply;
@@ -24,8 +26,8 @@ public class EventualServer extends DKVFServer {
 	int dcId;
 	int pId;
 
-	public EventualServer(ConfigReader cnfReader) {
-		super(cnfReader);
+	public EventualServer(ConfigReader cnfReader) throws IllegalAccessException {
+		super(cnfReader, edu.msu.cse.dkvf.metadata.Metadata.Record.class, edu.msu.cse.dkvf.metadata.Metadata.ServerMessage.class, Metadata.ClientMessage.class, Metadata.ClientReply.class );
 		this.cnfReader = cnfReader;
 		HashMap<String, List<String>> protocolProperties = cnfReader.getProtocolProperties();
 		numOfDatacenters = new Integer(protocolProperties.get("num_of_datacenters").get(0));
@@ -34,19 +36,21 @@ public class EventualServer extends DKVFServer {
 	}
 
 	public void handleClientMessage(ClientMessageAgent cma) {
-		if (cma.getClientMessage().hasGetMessage()) {
+		Metadata.ClientMessage cmsg = (Metadata.ClientMessage) cma.getClientMessage();
+		if (cmsg.hasGetMessage()) {
 			handleGetMessage(cma);
-		} else if (cma.getClientMessage().hasPutMessage()) {
+		} else if (cmsg.hasPutMessage()) {
 			handlePutMessage(cma);
 		}
 	}
 
 	private void handlePutMessage(ClientMessageAgent cma) {
+		Metadata.ClientMessage cmsg = (Metadata.ClientMessage) cma.getClientMessage();
 		Record.Builder builder = Record.newBuilder();
-		builder.setValue(cma.getClientMessage().getPutMessage().getValue());
+		builder.setValue(cmsg.getPutMessage().getValue());
 		builder.setUt(System.currentTimeMillis());
 		Record rec = builder.build();
-		StorageStatus ss = insert(cma.getClientMessage().getPutMessage().getKey(), rec);
+		StorageStatus ss = insert(cmsg.getPutMessage().getKey(), rec);
 
 		ClientReply cr = null;
 
@@ -57,7 +61,7 @@ public class EventualServer extends DKVFServer {
 		}
 
 		cma.sendReply(cr);
-		sendReplicateMessages(cma.getClientMessage().getPutMessage().getKey(), rec);
+		sendReplicateMessages(cmsg.getPutMessage().getKey(), rec);
 	}
 
 	private void sendReplicateMessages(String key, Record recordToReplicate) {
@@ -73,7 +77,8 @@ public class EventualServer extends DKVFServer {
 	}
 
 	private void handleGetMessage(ClientMessageAgent cma) {
-		GetMessage gm = cma.getClientMessage().getGetMessage();
+		Metadata.ClientMessage cmsg = (Metadata.ClientMessage) cma.getClientMessage();
+		GetMessage gm = cmsg.getGetMessage();
 		List<Record> result = new ArrayList<>();
 		StorageStatus ss = read(gm.getKey(), p -> {
 			return true;
@@ -88,8 +93,11 @@ public class EventualServer extends DKVFServer {
 		cma.sendReply(cr);
 	}
 
-	public void handleServerMessage(ServerMessage sm) {
-		Record newRecord = sm.getReplicateMessage().getRec();
-		insert(sm.getReplicateMessage().getKey(), newRecord);
+	public void handleServerMessage(GeneratedMessageV3 sm) {
+		ServerMessage smc = (ServerMessage) sm;
+		Record newRecord = smc.getReplicateMessage().getRec();
+		insert(smc.getReplicateMessage().getKey(), newRecord);
 	}
+
+
 }
