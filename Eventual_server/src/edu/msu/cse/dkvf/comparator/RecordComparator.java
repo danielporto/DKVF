@@ -5,7 +5,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 
 import edu.msu.cse.dkvf.metadata.Metadata.Record;
 
-public class RecordCompartor implements Comparator<byte[]>, java.io.Serializable{
+public class RecordComparator implements Comparator<byte[]>, java.io.Serializable{
 
 	public int compare(byte[] b1, byte[] b2) {
 

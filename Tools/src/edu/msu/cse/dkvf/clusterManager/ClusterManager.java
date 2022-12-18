@@ -17,12 +17,12 @@ import edu.msu.cse.dkvf.clusterManager.clusterDescriptor.ClusterReaderWriter;
 import edu.msu.cse.dkvf.clusterManager.clusterDescriptor.ClusterReaderWriter.ServerNode;
 import edu.msu.cse.dkvf.clusterManager.experimentDescriptor.ExperimentReader;
 import edu.msu.cse.dkvf.clusterManager.experimentDescriptor.ExperimentReader.YcsbClientNode;
-import edu.msu.cse.gdkvp.controlMetadata.ControlMetadata.ControlMessage;
-import edu.msu.cse.gdkvp.controlMetadata.ControlMetadata.ControlReply;
-import edu.msu.cse.gdkvp.controlMetadata.ControlMetadata.StatusCheck;
-import edu.msu.cse.gdkvp.controlMetadata.ControlMetadata.StatusCheckReply;
-import edu.msu.cse.gdkvp.controlMetadata.ControlMetadata.Turnoff;
-import edu.msu.cse.gdkvp.controlMetadata.ControlMetadata.TurnoffReply;
+import edu.msu.cse.dkvf.controlMetadata.ControlMetadata.ControlMessage;
+import edu.msu.cse.dkvf.controlMetadata.ControlMetadata.ControlReply;
+import edu.msu.cse.dkvf.controlMetadata.ControlMetadata.StatusCheck;
+import edu.msu.cse.dkvf.controlMetadata.ControlMetadata.StatusCheckReply;
+import edu.msu.cse.dkvf.controlMetadata.ControlMetadata.Turnoff;
+import edu.msu.cse.dkvf.controlMetadata.ControlMetadata.TurnoffReply;
 
 public class ClusterManager extends Manager {
 	ClusterReaderWriter cr;

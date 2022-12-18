@@ -45,7 +45,7 @@ public class BDBStorage extends Storage {
 	final static String DB_DIRECTORY_DEFAULT = "DB";
 	final static String INSTANT_STABLE_DEFAULT = "false";
 	final static String MULTI_VERSION = "true";
-	final static String COMPARATOR_CLASS_NAME_DEFAULT = "edu.msu.cse.dkvf.comparator.RecordCompartor";
+	final static String COMPARATOR_CLASS_NAME_DEFAULT = "edu.msu.cse.dkvf.comparator.RecordComparator";
 
 	/**
 	 * Initializes the storage engine. 
