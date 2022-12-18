@@ -1,26 +1,28 @@
 package edu.msu.cse.dkvf;
 
 
+import com.google.protobuf.CodedInputStream;
+import com.google.protobuf.CodedOutputStream;
+import com.google.protobuf.GeneratedMessageV3;
+import edu.msu.cse.dkvf.ServerConnector.NetworkStatus;
+import edu.msu.cse.dkvf.Storage.StorageStatus;
+import edu.msu.cse.dkvf.config.ConfigReader;
+import edu.msu.cse.dkvf.config.ConfigReader.ServerInfo;
+import edu.msu.cse.dkvf.controlMetadata.ControlMetadata.ControlMessage;
+import edu.msu.cse.dkvf.controlMetadata.ControlMetadata.ControlReply;
+
 import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import edu.msu.cse.dkvf.ServerConnector.NetworkStatus;
-import edu.msu.cse.dkvf.Storage.StorageStatus;
-import edu.msu.cse.dkvf.config.ConfigReader;
-import edu.msu.cse.dkvf.config.ConfigReader.ServerInfo;
-import edu.msu.cse.dkvf.metadata.Metadata.*;
-import edu.msu.cse.dkvf.controlMetadata.ControlMetadata.ControlMessage;
-import edu.msu.cse.dkvf.controlMetadata.ControlMetadata.ControlReply;
-
 /**
  * The base class for the server side of the protocol. Any protocol needs to
  * extends this class for the server side.
  *
  */
-public abstract class DKVFServer extends DKVFBase {
+public abstract class DKVFServer<Record extends GeneratedMessageV3, ServerMessage extends GeneratedMessageV3, ClientMessage extends GeneratedMessageV3, ClientReply extends GeneratedMessageV3> extends DKVFBase<Record, ServerMessage, ClientMessage, ClientReply> {
 	/**
 	 * Number of clients connected to this server.
 	 */
@@ -45,8 +47,8 @@ public abstract class DKVFServer extends DKVFBase {
 	 * Constructor for DKVFServer  
 	 * @param cnfReader The configuration reader
 	 */
-	public DKVFServer(ConfigReader cnfReader) {
-		super(cnfReader);
+	public DKVFServer(ConfigReader cnfReader, Class<Record> r, Class<ServerMessage> sm, Class<ClientMessage> cm, Class<ClientReply> cr) throws IllegalAccessException {
+		super(cnfReader, r, sm, cm, cr);
 		id = cnfReader.getConfig().getId();
 		synchCommunication = cnfReader.getConfig().isSynchCommunication();
 	}
@@ -93,7 +95,7 @@ public abstract class DKVFServer extends DKVFBase {
 	}
 
 	/**
-	 * Sets up {@link ChannelManagers} for peer servers.
+	 * Sets up {@link ChannelManager} for peer servers.
 	 * @return The result of the operation
 	 */
 	private NetworkStatus setupChannelManagers() {
@@ -171,7 +173,7 @@ public abstract class DKVFServer extends DKVFBase {
 	 * It does not guarantees delivery. It should be used for messages that tolerate loss.
 	 * @param serverId
 	 * 			The ID of the destination server. 
-	 * @param cm
+	 * @param sm
 	 * 			The client message to send
 	 * @return The result of the operation
 	 */
@@ -179,9 +181,9 @@ public abstract class DKVFServer extends DKVFBase {
 		if (serversOut.containsKey(serverId)) {
 			try {
 				synchronized (serversOut.get(serverId)) {
-					serversOut.get(serverId).writeInt32NoTag(sm.getSerializedSize());
-					sm.writeTo(serversOut.get(serverId));
-					serversOut.get(serverId).flush();
+					((CodedOutputStream) serversOut.get(serverId)).writeInt32NoTag(sm.getSerializedSize());
+					sm.writeTo((CodedOutputStream) serversOut.get(serverId));
+					((CodedOutputStream) serversOut.get(serverId)).flush();
 					//sm.writeDelimitedTo(serversOut.get(serverId));
 					frameworkLOGGER.finest(MessageFormat.format("Sent to server with id= {0} \n{1}", serverId, sm.toString()));
 					return NetworkStatus.SUCCESS;
@@ -213,9 +215,9 @@ public abstract class DKVFServer extends DKVFBase {
 			try {
 				ServerMessage sm;
 				synchronized (serversIn.get(serverId)) {
-					int size = serversIn.get(serverId).readInt32();
-					byte[] newMessageBytes = serversIn.get(serverId).readRawBytes(size);
-					sm = ServerMessage.parseFrom(newMessageBytes);
+					int size = ((CodedInputStream) serversIn.get(serverId)).readInt32();
+					byte[] newMessageBytes = ((CodedInputStream) serversIn.get(serverId)).readRawBytes(size);
+					sm = this.serverMessageParser.parseFrom(newMessageBytes);
 					//sm = ServerMessage.parseDelimitedFrom(serversIn.get(serverId));
 					frameworkLOGGER.finer(MessageFormat.format("Read from server with id={0} \n{1}", serverId, sm.toString()));
 				}

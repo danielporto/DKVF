@@ -1,20 +1,18 @@
 package edu.msu.cse.dkvf;
 
 
+import com.google.protobuf.CodedInputStream;
+import com.google.protobuf.CodedOutputStream;
+import com.google.protobuf.GeneratedMessageV3;
+
 import java.net.Socket;
 import java.text.MessageFormat;
 import java.util.logging.Logger;
-
-import com.google.protobuf.CodedInputStream;
-import com.google.protobuf.CodedOutputStream;
-
-import edu.msu.cse.dkvf.metadata.Metadata.ClientMessage;
 /**
  * The handler for incoming clients
  *
  */
-public class ClientHandler implements Runnable {
-	/**
+public class ClientHandler<ClientMessage extends GeneratedMessageV3> implements Runnable {/**
 	 * The protocol to run its client handler upon receiving a client message.
 	 */
 	DKVFServer protocol;
@@ -45,7 +43,7 @@ public class ClientHandler implements Runnable {
 			while (true) {
 				int size = in.readInt32();
 				byte[] newMessageBytes = in.readRawBytes(size);
-				ClientMessage cm = ClientMessage.parseFrom(newMessageBytes);
+				ClientMessage cm = (ClientMessage) this.protocol.clientMessageParser.parseFrom(newMessageBytes);
 				if (cm == null) {
 					LOGGER.info("Null message from client");
 					protocol.decrementNumberOfClients();

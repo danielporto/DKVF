@@ -1,5 +1,15 @@
 package edu.msu.cse.dkvf;
 
+import com.google.protobuf.CodedInputStream;
+import com.google.protobuf.CodedOutputStream;
+import com.google.protobuf.GeneratedMessageV3;
+import com.google.protobuf.Parser;
+import edu.msu.cse.dkvf.ServerConnector.NetworkStatus;
+import edu.msu.cse.dkvf.Storage.StorageStatus;
+import edu.msu.cse.dkvf.config.Config;
+import edu.msu.cse.dkvf.config.ConfigReader;
+import org.apache.commons.lang3.reflect.FieldUtils;
+
 import java.net.Socket;
 import java.text.MessageFormat;
 import java.util.ArrayList;
@@ -7,21 +17,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
-import java.util.logging.FileHandler;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.logging.SimpleFormatter;
-import java.util.logging.XMLFormatter;
-
-import com.google.protobuf.CodedInputStream;
-import com.google.protobuf.CodedOutputStream;
-
-
-import edu.msu.cse.dkvf.ServerConnector.*;
-import edu.msu.cse.dkvf.Storage.StorageStatus;
-import edu.msu.cse.dkvf.config.Config;
-import edu.msu.cse.dkvf.config.ConfigReader;
-import edu.msu.cse.dkvf.metadata.Metadata.Record;
+import java.util.logging.*;
 
 /**
  * The base class that is used by both {@link DKVFServer} and
@@ -29,7 +25,17 @@ import edu.msu.cse.dkvf.metadata.Metadata.Record;
  * services.
  *
  */
-public abstract class DKVFBase {
+public abstract class DKVFBase<Record extends GeneratedMessageV3, ServerMessage extends GeneratedMessageV3, ClientMessage extends GeneratedMessageV3, ClientReply extends GeneratedMessageV3> {
+
+	protected final Class<ServerMessage> serverMessageClass;
+	protected final Parser<ServerMessage> serverMessageParser;
+	protected final Class<ServerMessage> recordClass;
+	protected final Parser<Record> recordParser;
+	protected final Class<ClientMessage> clientMessageClass;
+	protected final Parser<ClientMessage> clientMessageParser;
+	protected final Class<ClientReply> clientReplyClass;
+	protected final Parser<ClientReply> clientReplyParser;
+
 	/**
 	 * Storage driver
 	 */
@@ -96,12 +102,19 @@ public abstract class DKVFBase {
 	 * @param cnfReader
 	 *            The configuration reader.
 	 */
-	public DKVFBase(ConfigReader cnfReader) {
+	public DKVFBase(ConfigReader cnfReader, Class<Record> r, Class<ServerMessage> sm, Class<ClientMessage> cm, Class<ClientReply> cr) throws IllegalAccessException {
 		this.cnfReader = cnfReader;
 		this.cnf = cnfReader.getConfig();
 		setupLogging();
 		setupStorage();
-
+		this.recordClass = sm;
+		this.recordParser = (Parser<Record>) FieldUtils.readStaticField(this.recordClass, "PARSER", true);
+		this.serverMessageClass = sm;
+		this.serverMessageParser = (Parser<ServerMessage>) FieldUtils.readStaticField(this.serverMessageClass, "PARSER", true);
+		this.clientMessageClass = cm;
+		this.clientMessageParser = (Parser<ClientMessage>) FieldUtils.readStaticField(this.clientMessageClass, "PARSER", true);
+		this.clientReplyClass = cr;
+		this.clientReplyParser = (Parser<ClientReply>) FieldUtils.readStaticField(this.clientReplyClass, "PARSER", true);
 	}
 
 	/**

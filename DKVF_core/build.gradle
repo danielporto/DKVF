@@ -68,6 +68,10 @@ dependencies {
     implementation files('../libs/YCSB/jackson-core-asl-1.9.4.jar')
     implementation files('../libs/YCSB/jackson-mapper-asl-1.9.13.jar')
     // implementation project(':DKVF_core')
+
+    // https://mvnrepository.com/artifact/org.apache.commons/commons-lang3
+    implementation 'org.apache.commons:commons-lang3:3.12.0'
+
 }
 
 // task import_dkvf_core {

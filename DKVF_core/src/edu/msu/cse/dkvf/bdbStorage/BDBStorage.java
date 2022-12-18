@@ -1,34 +1,22 @@
 package edu.msu.cse.dkvf.bdbStorage;
 
-import java.io.File;
+import com.google.protobuf.GeneratedMessageV3;
+import com.sleepycat.je.*;
+import edu.msu.cse.dkvf.Storage;
+import edu.msu.cse.dkvf.Utils;
 
-import java.util.ArrayList;
+import java.io.File;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
-
 import java.util.function.Predicate;
 import java.util.logging.Logger;
-
-import com.sleepycat.je.Cursor;
-import com.sleepycat.je.Database;
-import com.sleepycat.je.DatabaseConfig;
-import com.sleepycat.je.DatabaseEntry;
-
-import com.sleepycat.je.Environment;
-import com.sleepycat.je.EnvironmentConfig;
-import com.sleepycat.je.LockMode;
-import com.sleepycat.je.OperationStatus;
-
-import edu.msu.cse.dkvf.Storage;
-import edu.msu.cse.dkvf.Utils;
-import edu.msu.cse.dkvf.metadata.Metadata.*;
 
 /**
  * Driver for Berkeley-DB.
  *
  */
-public class BDBStorage extends Storage {
+public class BDBStorage<Record extends GeneratedMessageV3> extends Storage<Record> {
 
 	Logger logger;
 	String directory;
@@ -45,7 +33,11 @@ public class BDBStorage extends Storage {
 	final static String DB_DIRECTORY_DEFAULT = "DB";
 	final static String INSTANT_STABLE_DEFAULT = "false";
 	final static String MULTI_VERSION = "true";
-	final static String COMPARATOR_CLASS_NAME_DEFAULT = "edu.msu.cse.dkvf.comparator.RecordCompartor";
+	final static String COMPARATOR_CLASS_NAME_DEFAULT = "edu.msu.cse.dkvf.comparator.RecordComparator";
+
+	public BDBStorage(Class<Record> c) throws IllegalAccessException {
+		super(c);
+	}
 
 	/**
 	 * Initializes the storage engine. 
@@ -172,7 +164,7 @@ public class BDBStorage extends Storage {
 			OperationStatus retVal = cursor.getSearchKey(myKey, myData, LockMode.DEFAULT);
 
 			while (retVal == OperationStatus.SUCCESS) {
-				Record rec = Record.parseFrom(myData.getData());
+				Record rec = this.recordParser.parseFrom(myData.getData());
 				if (p.test(rec)) {
 					result.add(rec);
 					return StorageStatus.SUCCESS;
@@ -215,7 +207,7 @@ public class BDBStorage extends Storage {
 			OperationStatus retVal = cursor.getSearchKey(myKey, myData, LockMode.DEFAULT);
 
 			while (retVal == OperationStatus.SUCCESS) {
-				Record record = Record.parseFrom(myData.getData());
+				Record record = this.recordParser.parseFrom(myData.getData());
 				if (p.test(record))
 					result.add(record);
 				else {

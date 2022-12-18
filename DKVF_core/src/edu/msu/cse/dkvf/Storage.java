@@ -1,12 +1,14 @@
 package edu.msu.cse.dkvf;
 
-  
+
+import com.google.protobuf.GeneratedMessageV3;
+import com.google.protobuf.Parser;
+import org.apache.commons.lang3.reflect.FieldUtils;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.logging.Logger;
-
-import edu.msu.cse.dkvf.metadata.Metadata.Record;
 
 /**
  * The storage layer. Any driver written for a specific product must extend this 
@@ -14,8 +16,10 @@ import edu.msu.cse.dkvf.metadata.Metadata.Record;
  * 
  * 
  */
-public abstract class Storage {
-	
+public abstract class Storage<Record extends GeneratedMessageV3> {
+
+	protected final Parser<Record> recordParser;
+
 	/**
 	 * 
 	 * The status of a storage operation.
@@ -24,7 +28,14 @@ public abstract class Storage {
 	public enum StorageStatus {
 		SUCCESS, FAILURE
 	}
-	
+
+	private Class<Record> recordClass;
+
+	public Storage(Class<Record> c) throws IllegalAccessException {
+		this.recordClass = c;
+		this.recordParser = (Parser<Record>) FieldUtils.readStaticField(this.recordClass, "PARSER");
+	}
+
 	/**
 	 * Initializes the storage engine. 
 	 * @param parameters

@@ -1,12 +1,10 @@
 package edu.msu.cse.dkvf;
 
+import com.google.protobuf.CodedOutputStream;
+import com.google.protobuf.GeneratedMessageV3;
+
 import java.text.MessageFormat;
 import java.util.logging.Logger;
-
-import com.google.protobuf.CodedOutputStream;
-
-import edu.msu.cse.dkvf.metadata.Metadata.ClientMessage;
-import edu.msu.cse.dkvf.metadata.Metadata.ClientReply;
 
 /**
  * The class to facilitate the communicate with client for the server side of the
@@ -14,7 +12,7 @@ import edu.msu.cse.dkvf.metadata.Metadata.ClientReply;
  * 
  *
  */
-public class ClientMessageAgent {
+public class ClientMessageAgent<ClientMessage extends GeneratedMessageV3, ClientReply extends GeneratedMessageV3> {
 	ClientMessage cm;
 	Logger LOGGER;
 	CodedOutputStream out;

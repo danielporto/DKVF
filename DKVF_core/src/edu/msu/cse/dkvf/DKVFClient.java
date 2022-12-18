@@ -1,22 +1,20 @@
 package edu.msu.cse.dkvf;
 
 
+import com.google.protobuf.CodedInputStream;
+import com.google.protobuf.CodedOutputStream;
+import com.google.protobuf.GeneratedMessageV3;
+import edu.msu.cse.dkvf.ServerConnector.NetworkStatus;
+import edu.msu.cse.dkvf.config.ConfigReader;
 
 import java.text.MessageFormat;
-
-import edu.msu.cse.dkvf.ServerConnector.NetworkStatus;
-import edu.msu.cse.dkvf.Storage.StorageStatus;
-import edu.msu.cse.dkvf.config.ConfigReader;
-import edu.msu.cse.dkvf.metadata.Metadata.ClientMessage;
-import edu.msu.cse.dkvf.metadata.Metadata.ClientReply;
 
 /**
  * The base class for the client side of the protocol. Any protocol needs to
  * extends this class for the client side.
  *
  */
-public abstract class DKVFClient extends DKVFBase {
-
+public abstract class DKVFClient<Record extends GeneratedMessageV3, ServerMessage extends GeneratedMessageV3, ClientMessage extends GeneratedMessageV3, ClientReply extends GeneratedMessageV3> extends DKVFBase<Record, ServerMessage, ClientMessage, ClientReply> {
 	/**
 	 * The abstract method for putting a value with the given key.
 	 * 
@@ -40,8 +38,8 @@ public abstract class DKVFClient extends DKVFBase {
 	 */
 	public abstract byte[] get(String key);
 
-	public DKVFClient(ConfigReader cnfReader) {
-		super(cnfReader);
+	public DKVFClient(ConfigReader cnfReader, Class<Record> r, Class<ServerMessage> sm, Class<ClientMessage> cm, Class<ClientReply> cr) throws IllegalAccessException {
+		super(cnfReader, r, sm, cm, cr);
 	}
 
 	/**
@@ -93,9 +91,9 @@ public abstract class DKVFClient extends DKVFBase {
 	 */
 	public NetworkStatus sendToServer(String serverId, ClientMessage cm) {
 		try {
-			serversOut.get(serverId).writeInt32NoTag(cm.getSerializedSize());
-			cm.writeTo(serversOut.get(serverId));
-			serversOut.get(serverId).flush();
+			((CodedOutputStream) serversOut.get(serverId)).writeInt32NoTag(cm.getSerializedSize());
+			cm.writeTo((CodedOutputStream) serversOut.get(serverId));
+			((CodedOutputStream) serversOut.get(serverId)).flush();
 			//cm.writeDelimitedTo(serversOut.get(serverId));
 			frameworkLOGGER.finer(MessageFormat.format("Sent to server with id= {0} \n{1}", serverId, cm.toString()));
 			return NetworkStatus.SUCCESS;
@@ -114,9 +112,9 @@ public abstract class DKVFClient extends DKVFBase {
 	 */
 	public ClientReply readFromServer(String serverId) {
 		try {
-			int size = serversIn.get(serverId).readInt32();
-			byte[] result = serversIn.get(serverId).readRawBytes(size);
-			return ClientReply.parseFrom(result);
+			int size = ((CodedInputStream) serversIn.get(serverId)).readInt32();
+			byte[] result = ((CodedInputStream) serversIn.get(serverId)).readRawBytes(size);
+			return (ClientReply) clientMessageParser.parseFrom(result);
 		} catch (Exception e) {
 			//debug
 			frameworkLOGGER.warning("serversIn= " + serverId + " serversIn.get(serverId) = " + serversIn.get(serverId) + " serversOut.get(serverId)= " + serversOut.get(serverId));

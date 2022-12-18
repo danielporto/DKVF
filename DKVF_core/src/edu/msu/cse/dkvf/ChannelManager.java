@@ -1,21 +1,20 @@
 package edu.msu.cse.dkvf;
 
 
+import com.google.protobuf.CodedOutputStream;
+import com.google.protobuf.GeneratedMessageV3;
+
 import java.io.IOException;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.text.MessageFormat;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.logging.Logger;
-
-import com.google.protobuf.CodedOutputStream;
-
-import edu.msu.cse.dkvf.metadata.Metadata.ServerMessage;
 /**
  * This class manages the reliable FIFO delivery to servers.
  *
  */
-public class ChannelManager implements Runnable {
+public class ChannelManager<ServerMessage extends GeneratedMessageV3> implements Runnable {
 	LinkedBlockingDeque<ServerMessage> deque = new LinkedBlockingDeque<>();
 	boolean running = true;
 

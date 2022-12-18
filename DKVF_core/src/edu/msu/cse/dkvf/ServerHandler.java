@@ -1,20 +1,18 @@
 package edu.msu.cse.dkvf;
 
+import com.google.protobuf.CodedInputStream;
+import com.google.protobuf.GeneratedMessageV3;
+
 import java.net.Socket;
 import java.net.SocketException;
 import java.text.MessageFormat;
 import java.util.logging.Logger;
 
-import com.google.protobuf.CodedInputStream;
-
-import edu.msu.cse.dkvf.metadata.Metadata.ServerMessage;
-
 /** 
  * Server handler class
  *
  */
-public class ServerHandler implements Runnable {
-
+public class ServerHandler<ServerMessage extends GeneratedMessageV3> implements Runnable {
 	/**
 	 * The protocol to run its server handler upon receiving a server message
 	 */
@@ -44,7 +42,7 @@ public class ServerHandler implements Runnable {
 			while (!clientSocket.isClosed()) {
 				int size = in.readInt32();
 				byte[] newMessageBytes = in.readRawBytes(size);
-				ServerMessage sm = ServerMessage.parseFrom(newMessageBytes);
+				ServerMessage sm = (ServerMessage) this.protocol.serverMessageParser.parseFrom(newMessageBytes);
 				if (sm == null)
 					return;
 				LOGGER.finest(MessageFormat.format("New server message arrived:\n{0}", sm.toString()));
