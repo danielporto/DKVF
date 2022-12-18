@@ -14,7 +14,7 @@ description = "Eventual consistency client implementation"
 sourceSets {
     main {
         java {
-            srcDirs = ['src','src-gen']
+            srcDirs = ['src']
         }
         resources {
             srcDirs += ['resources']
@@ -36,28 +36,9 @@ dependencies {
     implementation files('../libs/YCSB/core-0.14.0-SNAPSHOT.jar')
     implementation files('../libs/YCSB/jackson-core-asl-1.9.4.jar')
     implementation files('../libs/YCSB/jackson-mapper-asl-1.9.13.jar')
-//    implementation project(':Eventual_server')
+    implementation project(path: ':Eventual_server')
+    implementation project(path: ':DKVF_core')
 }
-
-task import_server_core {
-    group 'setup'
-    description 'Copy the source files of Eventual_server/DKVF_core into the src to brake circular dependencies'
-    doLast{
-        println 'Eventual_client - Copying core files into local dir'
-        // copy the core (which includes the XSDs
-        copy {
-            from('../DKVF_core/src')
-            into('src')
-        }
-        // copy the core updated, which includes the Metadata generated from protobuf
-        copy {
-            from('../Eventual_server/src-gen')
-            into('src-gen')
-        }
-
-    }
-}
-compileJava.dependsOn(import_server_core)
 
 // configure jar
 jar {
@@ -73,43 +54,6 @@ jar {
         configurations.runtimeClasspath.findAll { it.name.endsWith('jar') || it.name.endsWith("xsd")  }.collect { zipTree(it) }
     }
 }
-
-
-
-
-task clean_core_files {
-    doLast {
-        def core_root = file("../DKVF_core").canonicalPath
-        def core_files = fileTree("../DKVF_core").filter { it.isFile() }.files.canonicalPath
-//    println(core_root)
-//    core_files.each { s -> println(s)}
-        def core_files_relative_path = core_files.collect { el -> el.replace(core_root + "/", "") }
-//    println(core_files_relative_path)
-        delete(files(core_files_relative_path))
-
-        // delete src-gen
-//        delete(file('src-gen'))
-
-        //now delete empty dirs
-        def emptyDirs = []
-        fileTree(".").visit {
-            def File f = it.file
-            if (f.isDirectory()) {
-                def children = project.fileTree(f).filter { it.isFile() }.files
-                if (children.size() == 0) {
-                    emptyDirs << f
-                }
-            }
-        }
-        // reverse so that we do the deepest folders first
-        emptyDirs.reverseEach { it.delete() }
-        print("Eventual_server - Core files cleaned.")
-    }
-}
-////
-clean.dependsOn clean_core_files
-
-
 
 tasks.withType(JavaCompile) {
     options.compilerArgs << '-Xlint:unchecked'
