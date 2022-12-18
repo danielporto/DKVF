@@ -10,12 +10,10 @@ import edu.msu.cse.dkvf.config.Config;
 import edu.msu.cse.dkvf.config.ConfigReader;
 import org.apache.commons.lang3.reflect.FieldUtils;
 
+import java.lang.reflect.InvocationTargetException;
 import java.net.Socket;
 import java.text.MessageFormat;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Predicate;
 import java.util.logging.*;
 
@@ -105,8 +103,6 @@ public abstract class DKVFBase<Record extends GeneratedMessageV3, ServerMessage 
 	public DKVFBase(ConfigReader cnfReader, Class<Record> r, Class<ServerMessage> sm, Class<ClientMessage> cm, Class<ClientReply> cr) throws IllegalAccessException {
 		this.cnfReader = cnfReader;
 		this.cnf = cnfReader.getConfig();
-		setupLogging();
-		setupStorage();
 		this.recordClass = sm;
 		this.recordParser = (Parser<Record>) FieldUtils.readStaticField(this.recordClass, "PARSER", true);
 		this.serverMessageClass = sm;
@@ -115,6 +111,8 @@ public abstract class DKVFBase<Record extends GeneratedMessageV3, ServerMessage 
 		this.clientMessageParser = (Parser<ClientMessage>) FieldUtils.readStaticField(this.clientMessageClass, "PARSER", true);
 		this.clientReplyClass = cr;
 		this.clientReplyParser = (Parser<ClientReply>) FieldUtils.readStaticField(this.clientReplyClass, "PARSER", true);
+		setupLogging();
+		setupStorage();
 	}
 
 	/**
@@ -123,9 +121,10 @@ public abstract class DKVFBase<Record extends GeneratedMessageV3, ServerMessage 
 	private void setupStorage() {
 		try {
 			Class<?> storageClass = Class.forName(cnf.getStorage().getClassName().trim());
-			storage = (Storage) storageClass.newInstance();
+			storage = (Storage) storageClass.getDeclaredConstructor(Class.class).newInstance(this.recordClass);
 			storage.init(cnfReader.getStorageProperties(), frameworkLOGGER);
-		} catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
+		} catch (ClassNotFoundException | InstantiationException | IllegalAccessException | NoSuchMethodException |
+				 InvocationTargetException e) {
 			throw new RuntimeException("Problem in setting up the storage", e);
 
 		}
@@ -180,12 +179,12 @@ public abstract class DKVFBase<Record extends GeneratedMessageV3, ServerMessage 
 		}
 	}
 
-	
+
 
 	// DB management
 	/**
 	 * Closes the db.
-	 * 
+	 *
 	 * @return The result of the operation.
 	 */
 	public StorageStatus closeDb() {
@@ -194,7 +193,7 @@ public abstract class DKVFBase<Record extends GeneratedMessageV3, ServerMessage 
 
 	/**
 	 * Runs the storage.
-	 * 
+	 *
 	 * @return The result of the operation.
 	 */
 	public StorageStatus runDb() {
@@ -203,7 +202,7 @@ public abstract class DKVFBase<Record extends GeneratedMessageV3, ServerMessage 
 
 	/**
 	 * Cleans the storage data.
-	 * 
+	 *
 	 * @return The result of the operation.
 	 */
 	public StorageStatus cleanDb() {
@@ -212,7 +211,7 @@ public abstract class DKVFBase<Record extends GeneratedMessageV3, ServerMessage 
 
 	/**
 	 * Inserts the given record for the given key.
-	 * 
+	 *
 	 * @param key
 	 *            The key of the record to insert.
 	 * @param value
@@ -230,7 +229,7 @@ public abstract class DKVFBase<Record extends GeneratedMessageV3, ServerMessage 
 	/**
 	 * Reads the value of the record with the given key that satisfies the given
 	 * predicate.
-	 * 
+	 *
 	 * @param key
 	 *            The key of the record to read.
 	 * @param p
@@ -261,7 +260,7 @@ public abstract class DKVFBase<Record extends GeneratedMessageV3, ServerMessage 
 	/**
 	 * Gets the storage driver object. It will be used whenever we want to call a
 	 * method of the storage driver that is not provided by the DKVFBase.
-	 * 
+	 *
 	 * @return The storage driver object.
 	 */
 	public Storage getStorage() {
@@ -270,7 +269,7 @@ public abstract class DKVFBase<Record extends GeneratedMessageV3, ServerMessage 
 
 	/**
 	 * Prepares the server to turn off.
-	 * 
+	 *
 	 * @return true if successful. false if successful.
 	 */
 	public boolean prepareToTurnOff() {
@@ -301,14 +300,14 @@ public abstract class DKVFBase<Record extends GeneratedMessageV3, ServerMessage 
 			return false;
 		}
 	}
-	
+
 	/**
 	 * Runs the server connector thread.
-	 * 
+	 *
 	 * @return The result of the operation.
 	 */
 	public NetworkStatus connectToServers() {
-		try { 
+		try {
 			ServerConnector sv = new ServerConnector(cnfReader.getServerInfos(), serversOut, serversIn, sockets, new Integer(cnf.getConnectorSleepTime().trim()), frameworkLOGGER);
 			Thread t = new Thread(sv);
 			t.start();

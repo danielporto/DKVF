@@ -1,23 +1,17 @@
 package edu.msu.cse.eventual.server;
 
-import java.text.MessageFormat;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-
 import com.google.protobuf.GeneratedMessageV3;
 import edu.msu.cse.dkvf.ClientMessageAgent;
 import edu.msu.cse.dkvf.DKVFServer;
 import edu.msu.cse.dkvf.Storage.StorageStatus;
 import edu.msu.cse.dkvf.config.ConfigReader;
 import edu.msu.cse.dkvf.metadata.Metadata;
-import edu.msu.cse.dkvf.metadata.Metadata.ClientReply;
-import edu.msu.cse.dkvf.metadata.Metadata.GetMessage;
-import edu.msu.cse.dkvf.metadata.Metadata.GetReply;
-import edu.msu.cse.dkvf.metadata.Metadata.PutReply;
-import edu.msu.cse.dkvf.metadata.Metadata.Record;
-import edu.msu.cse.dkvf.metadata.Metadata.ReplicateMessage;
-import edu.msu.cse.dkvf.metadata.Metadata.ServerMessage;
+import edu.msu.cse.dkvf.metadata.Metadata.*;
+
+import java.text.MessageFormat;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 public class EventualServer extends DKVFServer {
 	ConfigReader cnfReader;
@@ -27,7 +21,7 @@ public class EventualServer extends DKVFServer {
 	int pId;
 
 	public EventualServer(ConfigReader cnfReader) throws IllegalAccessException {
-		super(cnfReader, edu.msu.cse.dkvf.metadata.Metadata.Record.class, edu.msu.cse.dkvf.metadata.Metadata.ServerMessage.class, Metadata.ClientMessage.class, Metadata.ClientReply.class );
+		super(cnfReader, edu.msu.cse.dkvf.metadata.Metadata.Record.class, edu.msu.cse.dkvf.metadata.Metadata.ServerMessage.class, Metadata.ClientMessage.class, Metadata.ClientReply.class);
 		this.cnfReader = cnfReader;
 		HashMap<String, List<String>> protocolProperties = cnfReader.getProtocolProperties();
 		numOfDatacenters = new Integer(protocolProperties.get("num_of_datacenters").get(0));
