@@ -20,10 +20,10 @@ public class GentleRainClient extends DKVFClient {
 
 	Long gst = new Long(0);
 	Long dt = new Long(0);
-	int dcId; 
-	
+	int dcId;
+
 	int numOfPartitions;
-	
+
 	//This is just for test to enforce round-robin writes
 	int currentPartition = 0;
 
@@ -32,14 +32,14 @@ public class GentleRainClient extends DKVFClient {
 		HashMap<String, List<String>> protocolProperties = cnfReader.getProtocolProperties();
 		numOfPartitions = new Integer(protocolProperties.get("num_of_partitions").get(0));
 		dcId = new Integer(protocolProperties.get("dc_id").get(0));
-		
+
 	}
 
 	@Override
 	public boolean put(String key, byte[] value) {
 		try {
 			ClientMessage cm = ClientMessage.newBuilder().setPutMessage(PutMessage.newBuilder().setDt(dt).setKey(key).setValue(ByteString.copyFrom(value))).build();
-			
+
 			int partition = findPartition(key);
 			String serverId = dcId + "_" + partition;
 			if (sendToServer(serverId, cm) == NetworkStatus.FAILURE)
@@ -49,11 +49,11 @@ public class GentleRainClient extends DKVFClient {
 				dt = Math.max(dt, cr.getPutReply().getUt());
 				return true;
 			} else {
-				protocolLOGGER.severe("Server could not put the key= " + key);
+				LOGGER.fatal("Server could not put the key= " + key);
 				return false;
 			}
 		} catch (Exception e) {
-			protocolLOGGER.severe (Utils.exceptionLogMessge("Failed to put due to exception", e));
+			LOGGER.fatal (Utils.exceptionLogMessge("Failed to put due to exception", e));
 			return false;
 		}
 	}
@@ -73,11 +73,11 @@ public class GentleRainClient extends DKVFClient {
 				gst = Math.max(gst, cr.getGetReply().getGst());
 				return cr.getGetReply().getValue().toByteArray();
 			} else {
-				protocolLOGGER.severe("Server could not get the key= " + key);
+				LOGGER.fatal("Server could not get the key= " + key);
 				return null;
 			}
 		} catch (Exception e) {
-			protocolLOGGER.severe (Utils.exceptionLogMessge("Failed to get due to exception", e));
+			LOGGER.fatal (Utils.exceptionLogMessge("Failed to get due to exception", e));
 			return null;
 		}
 	}

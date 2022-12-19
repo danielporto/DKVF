@@ -4,12 +4,12 @@ package edu.msu.cse.dkvf;
 import com.google.protobuf.GeneratedMessageV3;
 import com.google.protobuf.Parser;
 import org.apache.commons.lang3.reflect.FieldUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.function.Predicate;
-import java.util.logging.Logger;
 
 /**
  * The storage layer. Any driver written for a specific product must extend this
@@ -22,9 +22,12 @@ public abstract class Storage<Record extends GeneratedMessageV3> {
 	protected final Parser<Record> recordParser;
 
 	/**
-	 *
+	 * Logger used
+	 */
+	protected static final Logger LOGGER = LogManager.getLogger(Storage.class);
+
+	/**
 	 * The status of a storage operation.
-	 *
 	 */
 	public enum StorageStatus {
 		SUCCESS, FAILURE
@@ -39,12 +42,10 @@ public abstract class Storage<Record extends GeneratedMessageV3> {
 	 * Initializes the storage engine.
 	 * @param parameters
 	 * 			A map of properties required by the storage engine to initialized.
-	 * @param logger
-	 * 			The logger used by the storage engine.
 	 * @return
 	 * 			The result of the operation.
 	 */
-	public abstract StorageStatus init(HashMap<String, String> parameters, Logger logger);
+	public abstract StorageStatus init(HashMap<String, String> parameters);
 
 
 	/**

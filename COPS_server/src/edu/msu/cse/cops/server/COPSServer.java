@@ -44,8 +44,8 @@ public class COPSServer extends DKVFServer {
 
 	// dependency check mechanism
 	HashMap<String, List<DependencyCheckMessage>> waitingDepChecks; //the key is the key that we want as dependency, and value is the dependency that is waiting for this key.
-	HashMap<String, List<String>> waitingLocalDeps; //the key is the key that we want as dependency, the value is the list of pending keys that are waiting. Both dependency key and pending key are hosted on this partition, that why it is called local dep check. 
-	HashMap<String, RecordDependecies> pendingKeys; //the key is the key that is pending, and the value is the record to write + its dependencies. 
+	HashMap<String, List<String>> waitingLocalDeps; //the key is the key that we want as dependency, the value is the list of pending keys that are waiting. Both dependency key and pending key are hosted on this partition, that why it is called local dep check.
+	HashMap<String, RecordDependecies> pendingKeys; //the key is the key that is pending, and the value is the record to write + its dependencies.
 
 	public COPSServer(ConfigReader cnfReader) {
 		super(cnfReader);
@@ -111,7 +111,7 @@ public class COPSServer extends DKVFServer {
 				continue;
 			String id = i + "_" + pId;
 
-			protocolLOGGER.finer(MessageFormat.format("Sendng replicate message to {0}: {1}", id, sm.toString()));
+			LOGGER.debug(MessageFormat.format("Sendng replicate message to {0}: {1}", id, sm.toString()));
 			sendToServerViaChannel(id, sm);
 		}
 	}
@@ -200,7 +200,7 @@ public class COPSServer extends DKVFServer {
 	}
 
 	private void handleReplicateMessage(ServerMessage sm) {
-		protocolLOGGER.finer(MessageFormat.format("Received replicate message: {0}", sm.toString()));
+		LOGGER.debug(MessageFormat.format("Received replicate message: {0}", sm.toString()));
 		ReplicateMessage rm = sm.getReplicateMessage();
 		updateClock(rm.getRec().getVersion());
 
@@ -227,7 +227,7 @@ public class COPSServer extends DKVFServer {
 			try {
 				partition = findPartition(key);
 			} catch (NoSuchAlgorithmException e) {
-				protocolLOGGER.severe("Problem finding partition for key " + key);
+				LOGGER.fatal("Problem finding partition for key " + key);
 				return;
 			}
 			if (partition != pId) {
@@ -239,7 +239,7 @@ public class COPSServer extends DKVFServer {
 	}
 
 	/**
-	 * 
+	 *
 	 * @param key
 	 *            Pending key, the key for which we are doing dependency
 	 *            checking.
@@ -256,7 +256,7 @@ public class COPSServer extends DKVFServer {
 					try {
 						hostingPartition = findPartition(dep.getKey());
 					} catch (NoSuchAlgorithmException e) {
-						protocolLOGGER.severe("Problem finding hosting partition for key " + dep.getKey());
+						LOGGER.fatal("Problem finding hosting partition for key " + dep.getKey());
 						continue;
 					}
 					if (hostingPartition != pId) {
@@ -274,7 +274,7 @@ public class COPSServer extends DKVFServer {
 				}
 			}
 		} catch (Exception e) {
-			protocolLOGGER.severe(edu.msu.cse.dkvf.Utils.exceptionLogMessge("Error in local dep checking", e));
+			LOGGER.fatal(edu.msu.cse.dkvf.Utils.exceptionLogMessge("Error in local dep checking", e));
 		}
 		return remaining;
 	}
@@ -321,10 +321,10 @@ public class COPSServer extends DKVFServer {
 	}
 
 	private void postVisibility(String key, long version) {
-		//Two types of partitions may wait for visibility of version: 1) local partition, or 2) antoher parition. 
-		//We check both cases. 
+		//Two types of partitions may wait for visibility of version: 1) local partition, or 2) antoher parition.
+		//We check both cases.
 
-		//local dep check 
+		//local dep check
 		try {
 			synchronized (pendingKeys) {
 				if (waitingLocalDeps.containsKey(key)) {
@@ -347,11 +347,11 @@ public class COPSServer extends DKVFServer {
 				}
 			}
 		} catch (Exception e) {
-			protocolLOGGER.severe(edu.msu.cse.dkvf.Utils.exceptionLogMessge("Error in PostVisibility: ", e));
+			LOGGER.fatal(edu.msu.cse.dkvf.Utils.exceptionLogMessge("Error in PostVisibility: ", e));
 
 		}
 
-		//check othre requests from other partitions		
+		//check othre requests from other partitions
 		if (waitingDepChecks.containsKey(key)) {
 			for (DependencyCheckMessage dcm : waitingDepChecks.get(key)) {
 				if (dcm.getDep().getVersion() <= version) {

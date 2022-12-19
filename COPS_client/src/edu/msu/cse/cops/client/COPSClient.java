@@ -22,9 +22,9 @@ public class COPSClient extends  DKVFClient{
 
 	int dcId;
 	int numOfPartitions;
-	
+
 	HashMap<String, Long> nearest;
-	
+
 	public COPSClient(ConfigReader cnfReader) {
 		super(cnfReader);
 		HashMap<String, List<String>> protocolProperties = cnfReader.getProtocolProperties();
@@ -48,11 +48,11 @@ public class COPSClient extends  DKVFClient{
 				nearest.put(key, cr.getPutReply().getVersion());
 				return true;
 			} else {
-				protocolLOGGER.severe("Server could not put the key= " + key);
+				LOGGER.fatal("Server could not put the key= " + key);
 				return false;
 			}
 		} catch (Exception e) {
-			protocolLOGGER.severe(Utils.exceptionLogMessge("Failed to put due to exception", e));
+			LOGGER.fatal(Utils.exceptionLogMessge("Failed to put due to exception", e));
 			return false;
 		}
 	}
@@ -71,20 +71,20 @@ public class COPSClient extends  DKVFClient{
 				updateNearest(key, cr.getGetReply().getRecord().getVersion());
 				return cr.getGetReply().getRecord().getValue().toByteArray();
 			} else {
-				protocolLOGGER.severe("Server could not get the key= " + key);
+				LOGGER.fatal("Server could not get the key= " + key);
 				return null;
 			}
 		} catch (Exception e) {
-			protocolLOGGER.severe(Utils.exceptionLogMessge("Failed to get due to exception", e));
+			LOGGER.fatal(Utils.exceptionLogMessge("Failed to get due to exception", e));
 			return null;
 		}
 	}
-	
+
 	private int findPartition(String key) throws NoSuchAlgorithmException {
 		long hash = Utils.getMd5HashLong(key);
 		return (int) (hash % numOfPartitions);
 	}
-	
+
 	private List<Dependency> getDcTimeItems() {
 		List<Dependency> result = new ArrayList<>();
 		for (Map.Entry<String, Long> entry : nearest.entrySet()) {
@@ -93,11 +93,11 @@ public class COPSClient extends  DKVFClient{
 		}
 		return result;
 	}
-	
+
 	private void updateNearest (String key, long version){
 		if (nearest.containsKey(key)){
 			nearest.put(key, Math.max(nearest.get(key), version));
-		}else 
+		}else
 			nearest.put(key, version);
 	}
 

@@ -30,10 +30,10 @@ public class SVVComputation implements Runnable {
 		
 		for (Map.Entry<Integer, List<Long>> childVv : server.childrenVvs.entrySet()) {
 			for (int i = 0; i < childVv.getValue().size(); i++) {
-				//server.protocolLOGGER.info(MessageFormat.format("###########myVV[{0}]= {1}, childVV[{0}] = {2}", i, minVv.get(i), childVv.getValue().get(i)));
+				//server.LOGGER.info(MessageFormat.format("###########myVV[{0}]= {1}, childVV[{0}] = {2}", i, minVv.get(i), childVv.getValue().get(i)));
 				if (minVv.get(i) > childVv.getValue().get(i)) {
 					minVv.set(i, childVv.getValue().get(i));
-					//server.protocolLOGGER.info("*Child is smaller*");
+					//server.LOGGER.info("*Child is smaller*");
 				}
 			}
 		}
@@ -44,7 +44,7 @@ public class SVVComputation implements Runnable {
 			server.setSvv(minVv);
 			sm = ServerMessage.newBuilder().setSvvMessage(SVVMessage.newBuilder().addAllSvvItem(minVv)).build();
 			server.sendToAllChildren(sm);
-			//server.protocolLOGGER.info(MessageFormat.format(">>>SVV[0]= {0}", server.svv.get(0)));
+			//server.LOGGER.info(MessageFormat.format(">>>SVV[0]= {0}", server.svv.get(0)));
 		}
 		//if the node is not root, it send vvMessage to its parent.
 		else {

@@ -1,11 +1,12 @@
 package edu.msu.cse.dkvf;
 
 import com.google.protobuf.GeneratedMessageV3;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.net.Socket;
 import java.net.SocketException;
 import java.text.MessageFormat;
-import java.util.logging.Logger;
 
 /**
  * Server handler class
@@ -18,13 +19,12 @@ public class ServerHandler<ServerMessage extends GeneratedMessageV3> implements 
 	DKVFServer protocol;
 
 	Socket clientSocket;
-	Logger LOGGER;
+	protected static final Logger LOGGER = LogManager.getLogger(Storage.class);
 
 	/**
 	 * Calls the protocol {@link DKVFServer#handleServerMessage} upon receiving a server message.
 	 */
-	public ServerHandler(Socket clientSocket, DKVFServer protocol, Logger logger) {
-		LOGGER = logger;
+	public ServerHandler(Socket clientSocket, DKVFServer protocol) {
 		this.clientSocket = clientSocket;
 		this.protocol = protocol;
 	}
@@ -41,14 +41,14 @@ public class ServerHandler<ServerMessage extends GeneratedMessageV3> implements 
 				ServerMessage sm = (ServerMessage) this.protocol.serverMessageParser.parseDelimitedFrom(clientSocket.getInputStream());
 				if (sm == null)
 					return;
-				LOGGER.finest(MessageFormat.format("New server message arrived:\n{0}", sm.toString()));
+				LOGGER.debug(MessageFormat.format("New server message arrived:\n{0}", sm.toString()));
 				protocol.handleServerMessage(sm);
 			}
 		} catch (SocketException e) {
 			LOGGER.info("Socket exception in server handler. Probably server has closed the socket.");
 			protocol.decrementNumberOfServers();
 		} catch (Exception e) {
-			LOGGER.severe(MessageFormat.format("Error in reading server message. toString: {0} Message:\n{1}",
+			LOGGER.fatal(MessageFormat.format("Error in reading server message. toString: {0} Message:\n{1}",
 					e.toString(), e.getMessage()));
 		}
 

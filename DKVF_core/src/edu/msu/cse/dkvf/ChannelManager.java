@@ -3,13 +3,15 @@ package edu.msu.cse.dkvf;
 
 import com.google.protobuf.CodedOutputStream;
 import com.google.protobuf.GeneratedMessageV3;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.text.MessageFormat;
 import java.util.concurrent.LinkedBlockingDeque;
-import java.util.logging.Logger;
+
 /**
  * This class manages the reliable FIFO delivery to servers.
  *
@@ -24,7 +26,7 @@ public class ChannelManager<ServerMessage extends GeneratedMessageV3> implements
 	private int port;
 	private ServerMessage currentMessage;
 	private int tryAgainWaitTime;
-	private Logger logger;
+	protected static final Logger LOGGER = LogManager.getLogger(ChannelManager.class);
 	
 	/**
 	 * Constructor for ChannelManager class
@@ -32,12 +34,10 @@ public class ChannelManager<ServerMessage extends GeneratedMessageV3> implements
 	 * @param port The port number of the destination
 	 * @param tryAgainWaitTime The time before trying again in case of a failed delivery
 	 * @param capacity The capacity of pending messages
-	 * @param logger The logger
 	 */
-	public ChannelManager(String ip, int port, int tryAgainWaitTime, int capacity, Logger logger) {
+	public ChannelManager(String ip, int port, int tryAgainWaitTime, int capacity) {
 		this.ip = ip;
 		this.port = port;
-		this.logger = logger;
 		this.deque = new LinkedBlockingDeque<>(capacity);
 		this.tryAgainWaitTime = tryAgainWaitTime;
 		Thread thread = new Thread(this);
@@ -73,7 +73,7 @@ public class ChannelManager<ServerMessage extends GeneratedMessageV3> implements
 				
 				if (currentMessage == null)
 					currentMessage = deque.takeFirst();
-				logger.finest(MessageFormat.format("Sending message to ip: {0}, port:{1}\n Message:\n{2}", ip, port, currentMessage.toString()));
+				LOGGER.debug(MessageFormat.format("Sending message to ip: {0}, port:{1}\n Message:\n{2}", ip, port, currentMessage.toString()));
 				out.writeInt32NoTag(currentMessage.getSerializedSize());
 				currentMessage.writeTo(out);
 				out.flush();

@@ -1,6 +1,8 @@
 package edu.msu.cse.dkvf;
 
 import edu.msu.cse.dkvf.config.ConfigReader.ServerInfo;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -8,7 +10,6 @@ import java.net.Socket;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Map;
-import java.util.logging.Logger;
 
 /**
  * Class to connect to specified servers
@@ -20,7 +21,7 @@ public class ServerConnector implements Runnable {
 	Map<String, InputStream> serversIn;
 	Map<String, Socket> sockets;
 	int sleepTime;
-	Logger LOGGER;
+	protected static final Logger LOGGER = LogManager.getLogger(ServerConnector.class);
 
 	/**
 	 * Network operation status
@@ -41,12 +42,9 @@ public class ServerConnector implements Runnable {
 	 * 			The map of IDs to servers to their sockets
 	 * @param sleepTime
 	 * 			The sleep time before trying connection again
-	 * @param logger
-	 * 			The logger
 	 */
 	public ServerConnector(ArrayList<ServerInfo> serversInfoToConnect, Map<String, OutputStream> serversOut,
-						   Map<String, InputStream> serversIn, Map<String, Socket> sockets, int sleepTime, Logger logger) {
-		this.LOGGER = logger;
+						   Map<String, InputStream> serversIn, Map<String, Socket> sockets, int sleepTime) {
 		this.serversOut = serversOut;
 		this.serversIn = serversIn;
 		this.sockets = sockets;
@@ -73,7 +71,7 @@ public class ServerConnector implements Runnable {
 				newSocket = new Socket(pendingServers.get(i).ip, pendingServers.get(i).port);
 				serversOut.put(pendingServers.get(i).id, newSocket.getOutputStream());
 				serversIn.put(pendingServers.get(i).id, newSocket.getInputStream());
-				LOGGER.fine(MessageFormat.format("Connected to server with\n\tid= {0} \n\tip= {1} \n\tport= {2}",
+				LOGGER.debug(MessageFormat.format("Connected to server with\n\tid= {0} \n\tip= {1} \n\tport= {2}",
 						pendingServers.get(i).id,
 						pendingServers.get(i).ip,
 						String.valueOf(pendingServers.get(i).port)

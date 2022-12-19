@@ -63,28 +63,28 @@ public abstract class DKVFServer<Record extends GeneratedMessageV3, ServerMessag
 		//setting up synchronous communication if it is requested in the config file.
 		if (synchCommunication){
 			if ( connectToServers() == NetworkStatus.SUCCESS)
-				frameworkLOGGER.info("Sucessfully ran the server connector");
+				LOGGER.info("Sucessfully ran the server connector");
 			else {
-				frameworkLOGGER.info("Failed to setup up synchronous communication.");
+				LOGGER.info("Failed to setup up synchronous communication.");
 				return false;
 			}
 		}
 
 		//asynchronous channels are always enalbled.
 		if (setupChannelManagers() == NetworkStatus.SUCCESS)
-			frameworkLOGGER.info("Sucessfully ran server channel managers.");
+			LOGGER.info("Sucessfully ran server channel managers.");
 		else {
-			frameworkLOGGER.info("Failed to setup up channels for asynchronous communication.");
+			LOGGER.info("Failed to setup up channels for asynchronous communication.");
 			return false;
 		}
 		if (runDb() == StorageStatus.SUCCESS)
-			frameworkLOGGER.info("Sucessfully ran the stable storage");
+			LOGGER.info("Sucessfully ran the stable storage");
 		else {
-			frameworkLOGGER.info("Failed to setup up storage.");
+			LOGGER.info("Failed to setup up storage.");
 			return false;
 		}
 		if (runListeners() == NetworkStatus.FAILURE){
-			frameworkLOGGER.info("Failed to setup listeners.");
+			LOGGER.info("Failed to setup listeners.");
 			return false;
 		}
 
@@ -100,14 +100,14 @@ public abstract class DKVFServer<Record extends GeneratedMessageV3, ServerMessag
 		try {
 			for (ServerInfo si : cnfReader.getServerInfos()) {
 				if (!channelManagers.containsKey(si.id)) {
-					ChannelManager cm = new ChannelManager(si.ip, si.port, new Integer(cnf.getConnectorSleepTime().trim()), new Integer(cnf.getChannelCapacity().trim()),frameworkLOGGER);
+					ChannelManager cm = new ChannelManager(si.ip, si.port, new Integer(cnf.getConnectorSleepTime().trim()), new Integer(cnf.getChannelCapacity().trim()));
 					channelManagers.put(si.id, cm);
 				}
 			}
 
 			return NetworkStatus.SUCCESS;
 		} catch (Exception e) {
-			frameworkLOGGER.severe(MessageFormat.format("Problem in creating channel managers. \n {0}", e.toString()));
+			LOGGER.fatal(MessageFormat.format("Problem in creating channel managers. \n {0}", e.toString()));
 			return NetworkStatus.FAILURE;
 		}
 	}
@@ -119,16 +119,16 @@ public abstract class DKVFServer<Record extends GeneratedMessageV3, ServerMessag
 	 */
 	public NetworkStatus runListeners() {
 		if (runServerListener() == NetworkStatus.SUCCESS)
-			frameworkLOGGER.info("Sucessfully run the server listener");
+			LOGGER.info("Sucessfully run the server listener");
 		else
 			return NetworkStatus.FAILURE;
 
 		if (runClientListener() == NetworkStatus.SUCCESS)
-			frameworkLOGGER.info("Sucessfully run the client listener");
+			LOGGER.info("Sucessfully run the client listener");
 		else
 			return NetworkStatus.FAILURE;
 		if (runControlListener() == NetworkStatus.SUCCESS)
-			frameworkLOGGER.info("Sucessfully run the control listener");
+			LOGGER.info("Sucessfully run the control listener");
 		else
 			return NetworkStatus.FAILURE;
 
@@ -155,11 +155,11 @@ public abstract class DKVFServer<Record extends GeneratedMessageV3, ServerMessag
 			channelManagers.get(serverId).addMessage(sm);
 			return NetworkStatus.SUCCESS;
 		} else {
-			frameworkLOGGER.severe(MessageFormat.format("No server found for id= {0}", serverId));
+			LOGGER.fatal(MessageFormat.format("No server found for id= {0}", serverId));
 			try {
 				throw new Exception();
 			}catch (Exception e) {
-				frameworkLOGGER.severe(Utils.exceptionToString(e));
+				LOGGER.fatal(Utils.exceptionToString(e));
 			}
 			return NetworkStatus.FAILURE;
 		}
@@ -180,19 +180,19 @@ public abstract class DKVFServer<Record extends GeneratedMessageV3, ServerMessag
 			try {
 				synchronized (serversOut.get(serverId)) {
 					sm.writeDelimitedTo(serversOut.get(serverId));
-					frameworkLOGGER.finest(MessageFormat.format("Sent to server with id= {0} \n{1}", serverId, sm.toString()));
+					LOGGER.debug(MessageFormat.format("Sent to server with id= {0} \n{1}", serverId, sm.toString()));
 					return NetworkStatus.SUCCESS;
 				}
 			} catch (IOException e) {
 				serversIn.remove(serverId);
 				serversOut.remove(serverId);
 				connectToServers();
-				frameworkLOGGER.severe(MessageFormat.format("Problem in sending to server with id= {0}, Message:\n{1}",
+				LOGGER.fatal(MessageFormat.format("Problem in sending to server with id= {0}, Message:\n{1}",
 						serverId, e.getMessage()));
 				return NetworkStatus.FAILURE;
 			}
 		} else {
-			frameworkLOGGER.severe(
+			LOGGER.fatal(
 					MessageFormat.format("No server found for id= {0} for message: \n {1}", serverId, sm.toString()));
 			return NetworkStatus.FAILURE;
 		}
@@ -211,16 +211,16 @@ public abstract class DKVFServer<Record extends GeneratedMessageV3, ServerMessag
 				ServerMessage sm;
 				synchronized (serversIn.get(serverId)) {
 					sm = this.serverMessageParser.parseDelimitedFrom(serversIn.get(serverId));
-					frameworkLOGGER.finer(MessageFormat.format("Read from server with id={0} \n{1}", serverId, sm.toString()));
+					LOGGER.debug(MessageFormat.format("Read from server with id={0} \n{1}", serverId, sm.toString()));
 				}
 				return sm;
 
 			} catch (Exception e) {
-				frameworkLOGGER.severe(MessageFormat.format("Problem in reading from server with id= {0}, toString= {1}, Message= {2}", serverId, e.toString(), e.getMessage()));
+				LOGGER.fatal(MessageFormat.format("Problem in reading from server with id= {0}, toString= {1}, Message= {2}", serverId, e.toString(), e.getMessage()));
 				return null;
 			}
 		} else {
-			frameworkLOGGER.severe(MessageFormat.format("No server found for id= {0}", serverId));
+			LOGGER.fatal(MessageFormat.format("No server found for id= {0}", serverId));
 			return null;
 		}
 	}
@@ -231,12 +231,12 @@ public abstract class DKVFServer<Record extends GeneratedMessageV3, ServerMessag
 	 */
 	private NetworkStatus runControlListener() {
 		try {
-			ControlListenerHandler sl = new ControlListenerHandler(new Integer(cnf.getControlPort().trim()), this, frameworkLOGGER);
+			ControlListenerHandler sl = new ControlListenerHandler(new Integer(cnf.getControlPort().trim()), this);
 			Thread t = new Thread(sl);
 			t.start();
 			return NetworkStatus.SUCCESS;
 		} catch (Exception e) {
-			frameworkLOGGER.severe(MessageFormat.format("Failed to run Control Listener at port= {0}, toString={1}, Message={2}", cnf.getControlPort(), e.toString(), e.getMessage()));
+			LOGGER.fatal(MessageFormat.format("Failed to run Control Listener at port= {0}, toString={1}, Message={2}", cnf.getControlPort(), e.toString(), e.getMessage()));
 			return NetworkStatus.FAILURE;
 		}
 	}
@@ -247,12 +247,12 @@ public abstract class DKVFServer<Record extends GeneratedMessageV3, ServerMessag
 	 */
 	private NetworkStatus runServerListener() {
 		try {
-			ServerListener sl = new ServerListener(new Integer(cnf.getServerPort().trim()), this, frameworkLOGGER);
+			ServerListener sl = new ServerListener(new Integer(cnf.getServerPort().trim()), this);
 			Thread t = new Thread(sl);
 			t.start();
 			return NetworkStatus.SUCCESS;
 		} catch (Exception e) {
-			frameworkLOGGER.severe(MessageFormat.format("Failed to run Servers Listener at port= {0}, toString={1}, Message={2}", cnf.getServerPort(), e.toString(), e.getMessage()));
+			LOGGER.fatal("Failed to run Servers Listener at port={}, toString={}, Message={}", cnf.getServerPort(), e.toString(), e.getMessage());
 			return NetworkStatus.FAILURE;
 		}
 	}
@@ -264,12 +264,12 @@ public abstract class DKVFServer<Record extends GeneratedMessageV3, ServerMessag
 	 */
 	private NetworkStatus runClientListener() {
 		try {
-			ClientListener cl = new ClientListener(new Integer(cnf.getClientPort().trim()), this, frameworkLOGGER);
+			ClientListener cl = new ClientListener(new Integer(cnf.getClientPort().trim()), this);
 			Thread t = new Thread(cl);
 			t.start();
 			return NetworkStatus.SUCCESS;
 		} catch (Exception e) {
-			frameworkLOGGER.severe(MessageFormat.format("Failed to run Clients Listener at port= {0}, toString={1}, Message={2}", cnf.getClientPort(), e.toString(), e.getMessage()));
+			LOGGER.fatal("Failed to run Clients Listener at port={}, toString={}, Message={}", cnf.getClientPort(), e.toString(), e.getMessage());
 			return NetworkStatus.FAILURE;
 		}
 	}

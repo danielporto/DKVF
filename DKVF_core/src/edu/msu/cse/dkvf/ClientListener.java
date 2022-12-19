@@ -1,9 +1,9 @@
 package edu.msu.cse.dkvf;
 
+import org.apache.logging.log4j.LogManager;
+
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.text.MessageFormat;
-import java.util.logging.Logger;
 
 /**
  * The listener for incoming clients
@@ -23,16 +23,14 @@ public class ClientListener implements Runnable {
 	/**
 	 * The logger to use by client listener
 	 */
-	Logger LOGGER;
+	protected static final org.apache.logging.log4j.Logger LOGGER = LogManager.getLogger(ClientListener.class);
 
 	/**
 	 * Constructor for ClientListener
 	 * @param port The port to listen for incoming clients
 	 * @param protocol The Protocol object that is used to handle client requests
-	 * @param logger The logger
 	 */
-	public ClientListener(int port, DKVFServer protocol, Logger logger) {
-		this.LOGGER = logger;
+	public ClientListener(int port, DKVFServer protocol) {
 		this.port = port;
 		this.protocol = protocol;
 	}
@@ -48,15 +46,13 @@ public class ClientListener implements Runnable {
 			serverSocket = new ServerSocket(port);
 		} catch (Exception e) {
 			try {
-				LOGGER.severe(MessageFormat.format(
-						"Problem in creating server socket to accept clients at port= {0} toString: {1} Message:\n{2}",
-						port, e.toString(), " Message: " + e.getMessage()));
+				LOGGER.fatal("Problem in creating server socket to accept clients at port={} toString: {} Message:\n\t{}",
+						port, e.toString(), e.getMessage());
 				if (serverSocket != null)
 					serverSocket.close();
 			} catch (Exception e1) {
-				LOGGER.warning(MessageFormat.format(
-						"Problem in closing serverSocket to accept clients at port= {0} toString: {1} Message:\n{2}",
-						port, e1.toString(), " Message: " + e1.getMessage()));
+				LOGGER.warn("Problem in closing serverSocket to accept clients at port={} toString: {} Message:\n\t{}",
+						port, e1.toString(), e1.getMessage());
 			}
 			return;
 		}
@@ -64,15 +60,14 @@ public class ClientListener implements Runnable {
 		while (true) {
 			try {
 				Socket clientSocket = serverSocket.accept();
-				LOGGER.finer("New client arrived.");
+				LOGGER.debug("New client arrived.");
 				protocol.incrementNumberOfClients();
-				ClientHandler ch = new ClientHandler(clientSocket, protocol, LOGGER);
+				ClientHandler ch = new ClientHandler(clientSocket, protocol);
 				Thread t = new Thread(ch);
 				t.start();
 			} catch (Exception e) {
-				LOGGER.severe(MessageFormat.format(
-						"Problem in accepting new client socket at port= {0} toString: {1} Message:\n{2}", port,
-						e.toString(), " Message: " + e.getMessage()));
+				LOGGER.fatal("Problem in accepting new client socket at port={} toString: {} Message:\n\t{}",
+						port, e.toString(), e.getMessage());
 			}
 
 		}

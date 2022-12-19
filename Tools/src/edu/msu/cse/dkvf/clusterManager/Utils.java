@@ -10,29 +10,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Scanner;
-import java.util.logging.Level;
 
 public class Utils {
-	public static Level getLevelFromString(String level) {
-		if (level.equals("severe"))
-			return Level.SEVERE;
-		else if (level.equals("warning"))
-			return Level.WARNING;
-		else if (level.equals("info"))
-			return Level.INFO;
-		else if (level.equals("fine"))
-			return Level.FINE;
-		else if (level.equals("finer"))
-			return Level.FINER;
-		else if (level.equals("finest"))
-			return Level.FINEST;
-		else if (level.equals("all"))
-			return Level.ALL;
-		else if (level.equals("config"))
-			return Level.CONFIG;
-		else
-			return Level.OFF;
-	}
 
 	public static void createTextFile(String content, String address) throws FileNotFoundException, UnsupportedEncodingException {
 		try {
@@ -111,7 +90,7 @@ public class Utils {
 		return str.matches("-?\\d+(\\.\\d+)?"); // match a number with optional
 												// '-' and decimal.
 	}
-	
+
 	public static String getPadding (int n){
 		String spaces = String.format("%"+n+"s", "");
 		return spaces;

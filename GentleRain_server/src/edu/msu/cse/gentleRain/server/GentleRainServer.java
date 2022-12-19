@@ -78,8 +78,8 @@ public class GentleRainServer extends DKVFServer {
 			vv.add(i, new AtomicLong(0));
 			allZero.add(new Long(0));
 		}
-		
-		
+
+
 		childrenVvs = new HashMap<>();
 		for (int cpId: childrenPIds){
 			childrenVvs.put(cpId, allZero);
@@ -99,7 +99,7 @@ public class GentleRainServer extends DKVFServer {
 			handleGetMessage(cma);
 		} else if (cma.getClientMessage().hasPutMessage()) {
 			handlePutMessage(cma);
-			
+
 		}
 	}
 
@@ -133,7 +133,7 @@ public class GentleRainServer extends DKVFServer {
 	}
 
 	Predicate<Record> isVisible = (Record r) -> {
-		protocolLOGGER.finer(MessageFormat.format("record ut= {0}, Current GST={1}", r.getUt(), gst.get()));
+		LOGGER.debug(MessageFormat.format("record ut= {0}, Current GST={1}", r.getUt(), gst.get()));
 		if (dcId == r.getSr() || r.getUt() <= gst.get())
 			return true;
 		return false;
@@ -158,14 +158,14 @@ public class GentleRainServer extends DKVFServer {
 		try {
 			if (sleepTime > 0){
 				Thread.sleep(sleepTime);
-				protocolLOGGER.info("Sleeping for " + sleepTime);
+				LOGGER.info("Sleeping for " + sleepTime);
 			}
 		} catch (InterruptedException e) {
-			protocolLOGGER.severe("Failed to delay write operation.");
+			LOGGER.fatal("Failed to delay write operation.");
 		}
 		vv.get(dcId).set(System.currentTimeMillis());
-		Record rec = null; 
-		
+		Record rec = null;
+
 		synchronized (putLock) {
 			rec = Record.newBuilder().setValue(pm.getValue()).setUt(vv.get(dcId).get()).setSr(dcId).build();
 			sendReplicateMessages(pm.getKey(),rec); // The order is different than the paper
@@ -173,7 +173,7 @@ public class GentleRainServer extends DKVFServer {
 										// insure a version with smaller
 										// timestamp is replicated sooner.
 		}
-		
+
 		StorageStatus ss = insert(pm.getKey(), rec);
 		ClientReply cr = null;
 		if (ss == StorageStatus.SUCCESS) {
@@ -182,7 +182,7 @@ public class GentleRainServer extends DKVFServer {
 			cr = ClientReply.newBuilder().setStatus(false).build();
 		}
 		cma.sendReply(cr);
-		
+
 	}
 
 	private void sendReplicateMessages(String key, Record recordToReplicate) {
@@ -192,13 +192,13 @@ public class GentleRainServer extends DKVFServer {
 				continue;
 			String id = i + "_" + pId;
 
-			protocolLOGGER.finer(MessageFormat.format("Sendng replicate message to {0}: {1}", id, sm.toString()));
+			LOGGER.debug(MessageFormat.format("Sendng replicate message to {0}: {1}", id, sm.toString()));
 			sendToServerViaChannel(id, sm);
 		}
 	}
 
 	private void handleReplicateMessage(ServerMessage sm) {
-		protocolLOGGER.finer(MessageFormat.format("Received replicate message: {0}", sm.toString()));
+		LOGGER.debug(MessageFormat.format("Received replicate message: {0}", sm.toString()));
 		int senderDcId = sm.getReplicateMessage().getDcId();
 		Record d = sm.getReplicateMessage().getRec();
 		insert(sm.getReplicateMessage().getKey(), d);

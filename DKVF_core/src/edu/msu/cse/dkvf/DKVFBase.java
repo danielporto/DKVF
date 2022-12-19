@@ -7,15 +7,19 @@ import edu.msu.cse.dkvf.Storage.StorageStatus;
 import edu.msu.cse.dkvf.config.Config;
 import edu.msu.cse.dkvf.config.ConfigReader;
 import org.apache.commons.lang3.reflect.FieldUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.net.Socket;
 import java.text.MessageFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Predicate;
-import java.util.logging.*;
 
 /**
  * The base class that is used by both {@link DKVFServer} and
@@ -65,35 +69,9 @@ public abstract class DKVFBase<Record extends GeneratedMessageV3, ServerMessage 
 	Map<String, Socket> sockets = new HashMap<>();
 
 	/**
-	 * The logger used by the protocol layer.
+	 * Logger used
 	 */
-	public Logger protocolLOGGER;
-
-	/**
-	 * The logger used by the framework layer.
-	 */
-	protected Logger frameworkLOGGER;
-
-	// Handlers
-	/**
-	 * File handler for the logger of the framework.
-	 */
-	FileHandler frameworkFh;
-
-	/**
-	 * Standard output handler for the logger of the framework.
-	 */
-	DualConsoleHandler frameworkDch;
-
-	/**
-	 * File handler for the logger of the protocol layer.
-	 */
-	FileHandler protocolFh;
-
-	/**
-	 * Standard output handler for the logger of the protocol layer.
-	 */
-	DualConsoleHandler protocolDch;
+	public static final Logger LOGGER = LogManager.getLogger(DKVFBase.class);
 
 	/**
 	 * The constructor for DKVFBass class
@@ -122,7 +100,7 @@ public abstract class DKVFBase<Record extends GeneratedMessageV3, ServerMessage 
 		try {
 			Class<?> storageClass = Class.forName(cnf.getStorage().getClassName().trim());
 			storage = (Storage) storageClass.getDeclaredConstructor(Class.class).newInstance(this.recordClass);
-			storage.init(cnfReader.getStorageProperties(), frameworkLOGGER);
+			storage.init(cnfReader.getStorageProperties());
 		} catch (ClassNotFoundException | InstantiationException | IllegalAccessException | NoSuchMethodException |
 				 InvocationTargetException e) {
 			throw new RuntimeException("Problem in setting up the storage", e);
@@ -133,49 +111,7 @@ public abstract class DKVFBase<Record extends GeneratedMessageV3, ServerMessage 
 	 * Sets up the logging.
 	 */
 	private void setupLogging() {
-		try {
-			Logger l0 = Logger.getLogger("");
-			synchronized (l0) {
-				if (l0.getHandlers().length > 0)
-					l0.removeHandler(l0.getHandlers()[0]);
-			}
-			Level frameworkStdLevel = Level.parse(cnf.getFrameworkStdLogLevel().toUpperCase());
-			Level frameworkLevel = Level.parse(cnf.getFrameworkLogLevel().toUpperCase());
-			Level minLevel = (frameworkLevel.intValue() < frameworkStdLevel.intValue()) ? frameworkLevel : frameworkStdLevel;
 
-			frameworkLOGGER = Logger.getLogger("frameworkLogger");
-			frameworkLOGGER.setLevel(minLevel);
-			Utils.checkParentAndCreate(cnf.getFrameworkLogFile());
-			frameworkFh = new FileHandler(cnf.getFrameworkLogFile());
-			frameworkFh.setLevel(frameworkLevel);
-			if (cnf.getFrameworkLogType().equals("text"))
-				frameworkFh.setFormatter(new SimpleFormatter());
-			else
-				frameworkFh.setFormatter(new XMLFormatter());
-			frameworkLOGGER.addHandler(frameworkFh);
-			frameworkDch = new DualConsoleHandler(frameworkStdLevel, Level.INFO);
-			frameworkLOGGER.addHandler(frameworkDch);
-
-			Level protocolStdLevel = Level.parse(cnf.getProtocolStdLogLevel().toUpperCase());
-			Level protocolLevel = Level.parse(cnf.getProtocolLogLevel().toUpperCase());
-			Level minProtocolLevel = (protocolLevel.intValue() < protocolStdLevel.intValue()) ? protocolLevel : protocolStdLevel;
-			protocolLOGGER = Logger.getLogger("protocolLogger");
-			protocolLOGGER.setLevel(minProtocolLevel);
-
-			Utils.checkParentAndCreate(cnf.getProtocolLogFile());
-			protocolFh = new FileHandler(cnf.getProtocolLogFile());
-			protocolFh.setLevel(protocolLevel);
-			if (cnf.getProtocolLogType().equals("text"))
-				protocolFh.setFormatter(new SimpleFormatter());
-			else
-				protocolFh.setFormatter(new XMLFormatter());
-			protocolLOGGER.addHandler(protocolFh);
-			protocolDch = new DualConsoleHandler(protocolStdLevel, Level.INFO);
-			protocolLOGGER.addHandler(protocolDch);
-
-		} catch (Exception e) {
-			throw new RuntimeException("Problem in logging setup.", e);
-		}
 	}
 
 
@@ -219,7 +155,7 @@ public abstract class DKVFBase<Record extends GeneratedMessageV3, ServerMessage 
 	 */
 	public StorageStatus insert(String key, Record value) {
 		if (storage == null) {
-			frameworkLOGGER.severe("Trying to put while stable storage is not set.");
+			LOGGER.fatal("Trying to put while stable storage is not set.");
 			return StorageStatus.FAILURE;
 		}
 		return storage.insert(key, value);
@@ -241,7 +177,7 @@ public abstract class DKVFBase<Record extends GeneratedMessageV3, ServerMessage 
 	 */
 	public StorageStatus read(String key, Predicate<Record> p, List<Record> result) {
 		if (storage == null) {
-			frameworkLOGGER.severe("Trying to getFirst while stable storage is not set.");
+			LOGGER.fatal("Trying to getFirst while stable storage is not set.");
 			return StorageStatus.FAILURE;
 		}
 
@@ -273,7 +209,7 @@ public abstract class DKVFBase<Record extends GeneratedMessageV3, ServerMessage 
 	 */
 	public boolean prepareToTurnOff() {
 		// We may need add more things to do here.
-		frameworkLOGGER.info("Preparing to turnoff");
+		LOGGER.info("Preparing to turnoff");
 		if (closeDb() != StorageStatus.SUCCESS)
 			return false;
 		try {
@@ -286,16 +222,10 @@ public abstract class DKVFBase<Record extends GeneratedMessageV3, ServerMessage 
 			for (Socket s : sockets.values())
 				s.close();
 
-			frameworkLOGGER.removeHandler(frameworkDch);
-			frameworkLOGGER.removeHandler(frameworkFh);
-
-			protocolLOGGER.removeHandler(protocolDch);
-			protocolLOGGER.removeHandler(protocolFh);
-
-			frameworkLOGGER.info("Sucessfully prepared for turn off.");
+			LOGGER.info("Sucessfully prepared for turn off.");
 			return true;
 		} catch (Exception e) {
-			frameworkLOGGER.severe(MessageFormat.format("Problem closing streams. e.toString() = {0}", e.toString()));
+			LOGGER.fatal(MessageFormat.format("Problem closing streams. e.toString() = {0}", e.toString()));
 			return false;
 		}
 	}
@@ -307,12 +237,12 @@ public abstract class DKVFBase<Record extends GeneratedMessageV3, ServerMessage 
 	 */
 	public NetworkStatus connectToServers() {
 		try {
-			ServerConnector sv = new ServerConnector(cnfReader.getServerInfos(), serversOut, serversIn, sockets, new Integer(cnf.getConnectorSleepTime().trim()), frameworkLOGGER);
+			ServerConnector sv = new ServerConnector(cnfReader.getServerInfos(), serversOut, serversIn, sockets, new Integer(cnf.getConnectorSleepTime().trim()));
 			Thread t = new Thread(sv);
 			t.start();
 			return NetworkStatus.SUCCESS;
 		} catch (Exception e) {
-			frameworkLOGGER.severe("Failed to run Server Connector" + " " + e.toString() + " Message: " + e.getMessage());
+			LOGGER.fatal("Failed to run Server Connector {} Message: {}", e.toString(), e.getMessage());
 			return NetworkStatus.FAILURE;
 		}
 	}

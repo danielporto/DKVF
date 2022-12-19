@@ -18,10 +18,10 @@ import java.util.List;
 
 public class EventualClient extends DKVFClient{
 	ConfigReader cnfReader;
-	
+
 	int dcId;
 	int numOfPartitions;
-	
+
 	public EventualClient(ConfigReader cnfReader) throws IllegalAccessException {
 		super(cnfReader, Metadata.Record.class, Metadata.ServerMessage.class, Metadata.ClientMessage.class, Metadata.ClientReply.class );
 		this.cnfReader = cnfReader;
@@ -41,15 +41,15 @@ public class EventualClient extends DKVFClient{
 			if (cr != null && cr.getStatus()) {
 				return true;
 			} else {
-				protocolLOGGER.severe("Server could not put the key= " + key);
+				LOGGER.fatal("Server could not put the key= " + key);
 				return false;
 			}
 		} catch (Exception e) {
-			protocolLOGGER.severe(Utils.exceptionLogMessge("Failed to put due to exception", e));
+			LOGGER.fatal(Utils.exceptionLogMessge("Failed to put due to exception", e));
 			return false;
 		}
 	}
-	
+
 	public byte[] get(String key) {
 		try {
 			GetMessage gm = GetMessage.newBuilder().setKey(key).build();
@@ -62,11 +62,11 @@ public class EventualClient extends DKVFClient{
 			if (cr != null && cr.getStatus()) {
 				return cr.getGetReply().getValue().toByteArray();
 			} else {
-				protocolLOGGER.severe("Server could not get the key= " + key);
+				LOGGER.fatal("Server could not get the key= " + key);
 				return null;
 			}
 		} catch (Exception e) {
-			protocolLOGGER.severe(Utils.exceptionLogMessge("Failed to get due to exception", e));
+			LOGGER.fatal(Utils.exceptionLogMessge("Failed to get due to exception", e));
 			return null;
 		}
 	}

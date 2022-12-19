@@ -180,7 +180,7 @@ public class CausalSpartanServer extends DKVFServer {
 				continue;
 			String id = i + "_" + pId;
 
-			protocolLOGGER.finer(MessageFormat.format("Sendng replicate message to {0}: {1}", id, sm.toString()));
+			LOGGER.debug(MessageFormat.format("Sendng replicate message to {0}: {1}", id, sm.toString()));
 			sendToServerViaChannel(id, sm);
 		}
 		timeOfLastRepOrHeartbeat = Utils.getPhysicalTime(); //we don't need to synchronize for it, because it is not critical
@@ -235,7 +235,7 @@ public class CausalSpartanServer extends DKVFServer {
 	}
 
 	private void handleReplicateMessage(ServerMessage sm) {
-		protocolLOGGER.finer(MessageFormat.format("Received replicate message: {0}", sm.toString()));
+		LOGGER.debug(MessageFormat.format("Received replicate message: {0}", sm.toString()));
 		int senderDcId = sm.getReplicateMessage().getDcId();
 		Record d = sm.getReplicateMessage().getRec();
 		insert(sm.getReplicateMessage().getKey(), d);
@@ -250,12 +250,12 @@ public class CausalSpartanServer extends DKVFServer {
 	void handleVvMessage(ServerMessage sm) {
 		int senderPId = sm.getVvMessage().getPId();
 		List<Long> receivedVv = sm.getVvMessage().getVvItemList();
-		protocolLOGGER.finest("Recieved" + sm.toString());
+		LOGGER.debug("Recieved" + sm.toString());
 		childrenVvs.put(senderPId, receivedVv);
 	}
 
 	void handleDsvMessage(ServerMessage sm) {
-		protocolLOGGER.finest(sm.toString());
+		LOGGER.debug(sm.toString());
 		setDsv(sm.getDsvMessage().getDsvItemList());
 		sm = ServerMessage.newBuilder().setDsvMessage(DSVMessage.newBuilder().addAllDsvItem(dsv)).build();
 		sendToAllChildren(sm);

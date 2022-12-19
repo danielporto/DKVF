@@ -2,10 +2,11 @@ package edu.msu.cse.dkvf;
 
 
 import com.google.protobuf.GeneratedMessageV3;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.net.Socket;
-import java.text.MessageFormat;
-import java.util.logging.Logger;
+
 /**
  * The handler for incoming clients
  *
@@ -16,15 +17,14 @@ public class ClientHandler<ClientMessage extends GeneratedMessageV3> implements 
 	DKVFServer protocol;
 
 	Socket clientSocket;
-	Logger LOGGER;
+	protected static final Logger LOGGER = LogManager.getLogger(ClientHandler.class);
 	/**
 	 * Constructor for ClientHandler.
 	 * @param clientSocket The Socket object of the client
 	 * @param protocol The Protocol object that is used to handle client requests
 	 * @param logger The logger
 	 */
-	public ClientHandler(Socket clientSocket, DKVFServer protocol, Logger logger) {
-		this.LOGGER = logger;
+	public ClientHandler(Socket clientSocket, DKVFServer protocol) {
 		this.clientSocket = clientSocket;
 		this.protocol = protocol;
 	}
@@ -36,6 +36,7 @@ public class ClientHandler<ClientMessage extends GeneratedMessageV3> implements 
 	 */
 	public void run() {
 		try {
+			LOGGER.info("Waiting on client messages...");
 			while (true) {
 				ClientMessage cm = (ClientMessage) this.protocol.clientMessageParser.parseDelimitedFrom(clientSocket.getInputStream());
 				if (cm == null) {
@@ -43,12 +44,12 @@ public class ClientHandler<ClientMessage extends GeneratedMessageV3> implements 
 					protocol.decrementNumberOfClients();
 					return;
 				}
-				LOGGER.finer(MessageFormat.format("New client message arrived:\n{0}", cm.toString()));
-				ClientMessageAgent cma = new ClientMessageAgent(cm, clientSocket.getOutputStream(), LOGGER);
+				LOGGER.debug("New client message arrived:\n\t{}", cm.toString());
+				ClientMessageAgent cma = new ClientMessageAgent(cm, clientSocket.getOutputStream());
 				protocol.handleClientMessage(cma);
 			}
 		} catch (Exception e) {
-			LOGGER.severe(Utils.exceptionLogMessge("Error in reading client message. toString: {0} Message:\n{1}", e));
+			LOGGER.fatal(Utils.exceptionLogMessge("Error in reading client message. toString: {0} Message:\n{1}", e));
 			protocol.decrementNumberOfClients();
 		}
 	}

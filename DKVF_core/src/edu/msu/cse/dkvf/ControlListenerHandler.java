@@ -1,17 +1,18 @@
 package edu.msu.cse.dkvf;
 
+import edu.msu.cse.dkvf.controlMetadata.ControlMetadata.ControlMessage;
+import edu.msu.cse.dkvf.controlMetadata.ControlMetadata.ControlReply;
+import edu.msu.cse.dkvf.controlMetadata.ControlMetadata.StatusCheckReply;
+import edu.msu.cse.dkvf.controlMetadata.ControlMetadata.TurnoffReply;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.text.MessageFormat;
-import java.util.logging.Logger;
-
-import edu.msu.cse.dkvf.controlMetadata.ControlMetadata.ControlMessage;
-import edu.msu.cse.dkvf.controlMetadata.ControlMetadata.ControlReply;
-import edu.msu.cse.dkvf.controlMetadata.ControlMetadata.StatusCheckReply;
-import edu.msu.cse.dkvf.controlMetadata.ControlMetadata.TurnoffReply;
 
 /**
  * The listener and handler for incoming control messages
@@ -20,16 +21,14 @@ import edu.msu.cse.dkvf.controlMetadata.ControlMetadata.TurnoffReply;
 public class ControlListenerHandler  implements Runnable {
 	int port;
 	DKVFServer protocol;
-	Logger LOGGER;
+	protected static final Logger LOGGER = LogManager.getLogger(ControlListenerHandler.class);
 
 	/**
 	 * Constructor for ControlListenerHandler
 	 * @param port The port to listen for incoming control messages
-	 * @param protocol The Protocol object to handle extra control messages 
-	 * @param logger The logger
+	 * @param protocol The Protocol object to handle extra control messages
 	 */
-	public ControlListenerHandler(int port, DKVFServer protocol, Logger logger) {
-		this.LOGGER = logger;
+	public ControlListenerHandler(int port, DKVFServer protocol) {
 		this.port = port;
 		this.protocol = protocol;
 	}
@@ -46,10 +45,10 @@ public class ControlListenerHandler  implements Runnable {
 			serverSocket = new ServerSocket(port);
 		} catch (Exception e) {
 			try {
-				LOGGER.severe(MessageFormat.format("Problem in creating server socket to accept control requests at port= {0} toString: {1} Message:\n{2}", port, e.toString(), " Message: " + e.getMessage()));
+				LOGGER.fatal(MessageFormat.format("Problem in creating server socket to accept control requests at port= {0} toString: {1} Message:\n{2}", port, e.toString(), " Message: " + e.getMessage()));
 				serverSocket.close();
 			} catch (Exception e1) {
-				LOGGER.warning(MessageFormat.format("Problem in closing server socket to accept control requests = at port= {0} toString: {1} Message:\n{2}", port, e.toString(), " Message: " + e.getMessage()));
+				LOGGER.warn(MessageFormat.format("Problem in closing server socket to accept control requests = at port= {0} toString: {1} Message:\n{2}", port, e.toString(), " Message: " + e.getMessage()));
 			}
 			return;
 		}
@@ -66,10 +65,10 @@ public class ControlListenerHandler  implements Runnable {
 				if (cm == null)
 					return;
 			} catch (Exception e) {
-				LOGGER.severe(MessageFormat.format("Problem in accepting new control request at port= {0} toString: {1} Message:\n{2}", port, e.toString(), " Message: " + e.getMessage()));
+				LOGGER.fatal(MessageFormat.format("Problem in accepting new control request at port= {0} toString: {1} Message:\n{2}", port, e.toString(), " Message: " + e.getMessage()));
 			}
 			try {
-				LOGGER.finer(MessageFormat.format("New control message arrived:\n{0}", cm.toString()));
+				LOGGER.debug(MessageFormat.format("New control message arrived:\n{0}", cm.toString()));
 				if (cm.hasTurnoff())
 					turnoff(out, clientSocket);
 				else {
@@ -80,7 +79,7 @@ public class ControlListenerHandler  implements Runnable {
 				}
 			} catch (Exception e) {
 				
-				LOGGER.severe(Utils.exceptionLogMessge("Problem in sending control respond", e));
+				LOGGER.fatal(Utils.exceptionLogMessge("Problem in sending control respond", e));
 			}
 		}
 	}
@@ -118,7 +117,7 @@ public class ControlListenerHandler  implements Runnable {
 				LOGGER.info("Server is going to turn off as requested...");
 				System.exit(0);
 			} catch (IOException e) {
-				LOGGER.severe("Failed to send turnoff reply message to requester.");
+				LOGGER.fatal("Failed to send turnoff reply message to requester.");
 			}
 		} else {
 			LOGGER.info("Request to turnoff the server got rejected.");
@@ -126,7 +125,7 @@ public class ControlListenerHandler  implements Runnable {
 			try {
 				cr.writeDelimitedTo(out);
 			} catch (IOException e) {
-				LOGGER.severe("Failed to send turnoff reply message to requester.");
+				LOGGER.fatal("Failed to send turnoff reply message to requester.");
 			}
 		}
 	}

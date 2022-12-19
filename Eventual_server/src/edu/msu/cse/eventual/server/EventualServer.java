@@ -8,7 +8,6 @@ import edu.msu.cse.dkvf.config.ConfigReader;
 import edu.msu.cse.dkvf.eventual.metadata.Metadata;
 import edu.msu.cse.dkvf.eventual.metadata.Metadata.*;
 
-import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -39,7 +38,6 @@ public class EventualServer extends DKVFServer {
 	}
 
 	private void handlePutMessage(ClientMessageAgent cma) {
-		System.out.println("EventualServer.handlePutMessage");
 		Metadata.ClientMessage cmsg = (Metadata.ClientMessage) cma.getClientMessage();
 		Metadata.Record.Builder builder = Metadata.Record.newBuilder();
 		builder.setValue(cmsg.getPutMessage().getValue());
@@ -66,13 +64,12 @@ public class EventualServer extends DKVFServer {
 				continue;
 			String id = i + "_" + pId;
 
-			protocolLOGGER.finer(MessageFormat.format("Sendng replicate message to {0}: {1}", id, sm.toString()));
+			LOGGER.debug("Sending replicate message to {}: {}", id, sm.toString());
 			sendToServerViaChannel(id, sm);
 		}
 	}
 
 	private void handleGetMessage(ClientMessageAgent cma) {
-		System.out.println("EventualServer.handleGetMessage");
 		Metadata.ClientMessage cmsg = (Metadata.ClientMessage) cma.getClientMessage();
 		GetMessage gm = cmsg.getGetMessage();
 		List<Metadata.Record> result = new ArrayList<>();

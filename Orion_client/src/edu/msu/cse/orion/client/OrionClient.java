@@ -2,7 +2,6 @@ package edu.msu.cse.orion.client;
 
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
-import java.util.logging.Level;
 
 import com.google.protobuf.ByteString;
 
@@ -61,11 +60,11 @@ public class OrionClient extends DKVFClient {
                 updateDS(dcId, cr.getPutReply().getUt());
                 return true;
             } else {
-                protocolLOGGER.severe("Server could not put the key= " + key);
+                LOGGER.fatal("Server could not put the key= " + key);
                 return false;
             }
         } catch (Exception e) {
-            protocolLOGGER.severe(Utils.exceptionLogMessge("Failed to put due to exception", e));
+            LOGGER.fatal(Utils.exceptionLogMessge("Failed to put due to exception", e));
             return false;
         }
     }
@@ -86,11 +85,11 @@ public class OrionClient extends DKVFClient {
                 }
                 return cr.getGetReply().getValue().toByteArray();
             } else {
-                protocolLOGGER.severe("Server could not get the key= " + key);
+                LOGGER.fatal("Server could not get the key= " + key);
                 return null;
             }
         } catch (Exception e) {
-            protocolLOGGER.severe(Utils.exceptionLogMessge("Failed to get due to exception", e));
+            LOGGER.fatal(Utils.exceptionLogMessge("Failed to get due to exception", e));
             return null;
         }
     }
@@ -136,7 +135,7 @@ public class OrionClient extends DKVFClient {
                 RotMessage rm = RotMessage.newBuilder().addAllDsvItem(predictedDSV).addAllKey(e.getValue()).build();
                 ClientMessage cm = ClientMessage.newBuilder().setRotMessage(rm).build();
                 if (sendToServer(e.getKey(), cm) == NetworkStatus.FAILURE) {
-                    protocolLOGGER.severe("Failed to send to server " + e.getKey());
+                    LOGGER.fatal("Failed to send to server " + e.getKey());
                     return null;
                 }
             }
@@ -145,7 +144,7 @@ public class OrionClient extends DKVFClient {
             for (Map.Entry<String, List<String>> e : serverKeyMap.entrySet()) {
                 ClientReply cr = readFromServer(e.getKey());
                 if (cr != null && cr.getStatus()) {
-                    if (protocolLOGGER.isLoggable(Level.SEVERE))
+                    if (LOGGER.isLoggable(Level.fatal))
                         logDifference(cr.getRotReply().getDsvItemList(), predictedDSV);
                     updateDsv(cr.getRotReply().getDsvItemList());
                     for (Map.Entry<Integer, Long> dti : cr.getRotReply().getDsItemsMap().entrySet()) {
@@ -153,12 +152,12 @@ public class OrionClient extends DKVFClient {
                     }
                     results.putAll(cr.getRotReply().getKeyValueMap());
                 } else {
-                    protocolLOGGER.severe("Server could not get the keys= " + keys);
+                    LOGGER.fatal("Server could not get the keys= " + keys);
                     return null;
                 }
             }
         } catch (Exception e) {
-            protocolLOGGER.severe(Utils.exceptionLogMessge("Failed to get due to exception", e));
+            LOGGER.fatal(Utils.exceptionLogMessge("Failed to get due to exception", e));
             return null;
         }
         return results;
@@ -201,7 +200,7 @@ public class OrionClient extends DKVFClient {
         for (int i = 0; i < actual.size(); i++)
             result += edu.msu.cse.orion.client.Utils.shiftToLowBits(Math.abs(actual.get(i) - prediction.get(i)));
 
-        protocolLOGGER.severe("DIFFERENCE " + (result + 0.0) / actual.size());
+        LOGGER.fatal("DIFFERENCE " + (result + 0.0) / actual.size());
 
     }
 }

@@ -10,7 +10,6 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.function.Predicate;
-import java.util.logging.Logger;
 
 /**
  * Driver for Berkeley-DB.
@@ -18,7 +17,6 @@ import java.util.logging.Logger;
  */
 public class BDBStorage<Record extends GeneratedMessageV3> extends Storage<Record> {
 
-	Logger logger;
 	String directory;
 	String name;
 	boolean instantStable;
@@ -42,11 +40,9 @@ public class BDBStorage<Record extends GeneratedMessageV3> extends Storage<Recor
 	/**
 	 * Initializes the storage engine.
 	 * @param storageConfig The configuration for the storage engine
-	 * @param logger The logger
 	 * @return The result of the operation
 	 */
-	public StorageStatus init(HashMap<String, String> storageConfig, Logger logger) {
-		this.logger = logger;
+	public StorageStatus init(HashMap<String, String> storageConfig) {
 		this.directory = setProperty(DB_DIRECTORY_DEFAULT, storageConfig.get("db_directory"));
 		this.name = setProperty(DB_NAME_DEFAULT, storageConfig.get("db_name"));
 		this.instantStable = Boolean.parseBoolean(setProperty(INSTANT_STABLE_DEFAULT, storageConfig.get("instant_stable")));
@@ -69,14 +65,14 @@ public class BDBStorage<Record extends GeneratedMessageV3> extends Storage<Recor
 			if (db != null)
 				db.put(null, myKey, myData);
 			else {
-				logger.severe("Problem in puting key= " + key + ". DB is not running properly.");
+				LOGGER.fatal("Problem in puting key={} DB is not running properly.", key);
 				return StorageStatus.FAILURE;
 			}
 			if (instantStable)
 				db.sync();
 			return StorageStatus.SUCCESS;
 		} catch (Exception e) {
-			logger.severe("Problem in puting key= " + key + " " + e.toString() + " Message: " + e.getMessage());
+			LOGGER.fatal("Problem in puting key= " + key + " " + e.toString() + " Message: " + e.getMessage());
 			return StorageStatus.FAILURE;
 		}
 	}
@@ -91,11 +87,11 @@ public class BDBStorage<Record extends GeneratedMessageV3> extends Storage<Recor
 				db.sync();
 				return StorageStatus.SUCCESS;
 			} else {
-				logger.severe("Problem in making db stable: DB is not running properly.");
+				LOGGER.fatal("Problem in making db stable: DB is not running properly.");
 				return StorageStatus.FAILURE;
 			}
 		} catch (Exception e) {
-			logger.severe("Problem in making db stable: " + e.toString());
+			LOGGER.fatal("Problem in making db stable: " + e.toString());
 			return StorageStatus.FAILURE;
 		}
 	}
@@ -116,7 +112,7 @@ public class BDBStorage<Record extends GeneratedMessageV3> extends Storage<Recor
 				return StorageStatus.FAILURE;
 			return StorageStatus.SUCCESS;
 		} catch (Exception e) {
-			logger.severe("Problem in cleaning db: " + e.toString() + "\n\tDirectory= " + directory);
+			LOGGER.fatal("Problem in cleaning db: {} \n\tDirectory= {}", e.toString(), directory);
 			return StorageStatus.FAILURE;
 		}
 	}
@@ -136,7 +132,7 @@ public class BDBStorage<Record extends GeneratedMessageV3> extends Storage<Recor
 			}
 			return StorageStatus.SUCCESS;
 		} catch (Exception e) {
-			logger.severe("Problem in closing db: " + e.toString());
+			LOGGER.fatal("Problem in closing db: " + e.toString());
 			return StorageStatus.FAILURE;
 		}
 	}
@@ -157,7 +153,7 @@ public class BDBStorage<Record extends GeneratedMessageV3> extends Storage<Recor
 			if (db != null)
 				cursor = db.openCursor(null, null);
 			else {
-				logger.severe("Problem in getFirst. DB is not running properly.");
+				LOGGER.fatal("Problem in getFirst. DB is not running properly.");
 				return StorageStatus.FAILURE;
 			}
 			// Position the cursor
@@ -175,7 +171,7 @@ public class BDBStorage<Record extends GeneratedMessageV3> extends Storage<Recor
 			cursor.close();
 			return StorageStatus.FAILURE;
 		} catch (Exception e) {
-			logger.severe("Problem in reading key= " + key + " : " + e.toString());
+			LOGGER.fatal("Problem in reading key= " + key + " : " + e.toString());
 			return StorageStatus.FAILURE;
 		} finally {
 			if (cursor != null)
@@ -200,7 +196,7 @@ public class BDBStorage<Record extends GeneratedMessageV3> extends Storage<Recor
 			if (db != null)
 				cursor = db.openCursor(null, null);
 			else {
-				logger.severe("Problem in getAll. DB is not running properly.");
+				LOGGER.fatal("Problem in getAll. DB is not running properly.");
 				return StorageStatus.FAILURE;
 			}
 			// Position the cursor
@@ -220,7 +216,7 @@ public class BDBStorage<Record extends GeneratedMessageV3> extends Storage<Recor
 			else
 				return StorageStatus.FAILURE;
 		} catch (Exception e) {
-			logger.severe("Problem in reading key= " + key + " : " + e.toString());
+			LOGGER.fatal("Problem in reading key= " + key + " : " + e.toString());
 			return StorageStatus.FAILURE;
 		} finally {
 			if (cursor != null)
@@ -255,7 +251,7 @@ public class BDBStorage<Record extends GeneratedMessageV3> extends Storage<Recor
 			db = env.openDatabase(null, name, dbConfig);
 			return StorageStatus.SUCCESS;
 		} catch (Exception e) {
-			logger.severe(Utils.exceptionLogMessge("Problem in running db", e));
+			LOGGER.fatal(Utils.exceptionLogMessge("Problem in running db", e));
 			return StorageStatus.FAILURE;
 		}
 	}

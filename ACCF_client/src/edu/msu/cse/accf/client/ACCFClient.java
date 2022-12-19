@@ -21,7 +21,7 @@ import edu.msu.cse.dkvf.metadata.Metadata.TgTimeItem;
 public class ACCFClient extends DKVFClient {
 	HashMap<Integer, Long> ds; //dependency set
 	int cg_id; //current checking group
-	
+
 	int numOfPartitions;
 	int numOfTrackingGroups;
 
@@ -47,11 +47,11 @@ public class ACCFClient extends DKVFClient {
 				updateDS(cr.getPutReply().getTg(), cr.getPutReply().getUt());
 				return true;
 			} else {
-				protocolLOGGER.severe("Server could not put the key= " + key);
+				LOGGER.fatal("Server could not put the key= " + key);
 				return false;
 			}
 		} catch (Exception e) {
-			protocolLOGGER.severe(Utils.exceptionLogMessge("Failed to put due to exception", e));
+			LOGGER.fatal(Utils.exceptionLogMessge("Failed to put due to exception", e));
 			return false;
 		}
 	}
@@ -71,11 +71,11 @@ public class ACCFClient extends DKVFClient {
 				updateDS(cr.getGetReply().getD().getTg(), cr.getGetReply().getD().getUt());
 				return cr.getGetReply().getD().getValue().toByteArray();
 			} else {
-				protocolLOGGER.severe("Server could not get the key= " + key);
+				LOGGER.fatal("Server could not get the key= " + key);
 				return null;
 			}
 		} catch (Exception e) {
-			protocolLOGGER.severe(Utils.exceptionLogMessge("Failed to get due to exception", e));
+			LOGGER.fatal(Utils.exceptionLogMessge("Failed to get due to exception", e));
 			return null;
 		}
 	}
@@ -83,7 +83,7 @@ public class ACCFClient extends DKVFClient {
 	public String findServer(String key) throws NoSuchAlgorithmException {
 		long hash = Utils.getMd5HashLong(key);
 		int partition =  (int) (hash % numOfPartitions);
-		return cg_id + "_" + partition; //we should change this function for final system. It can query a load balancer to find the server. 
+		return cg_id + "_" + partition; //we should change this function for final system. It can query a load balancer to find the server.
 	}
 
 	private void updateDS(int tg, long time) {

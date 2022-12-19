@@ -48,7 +48,7 @@ public abstract class DKVFClient<Record extends GeneratedMessageV3, ServerMessag
 	 */
 	public boolean runAll() {
 		if (connectToServers() == NetworkStatus.SUCCESS){
-			frameworkLOGGER.info("Sucessfully ran the server connector");
+			LOGGER.info("Sucessfully ran the server connector");
 
 		}
 		else
@@ -59,7 +59,7 @@ public abstract class DKVFClient<Record extends GeneratedMessageV3, ServerMessag
 
 
 		if (runDb() == StorageStatus.SUCCESS)
-			frameworkLOGGER.info("Sucessfully ran the stable storage");
+			LOGGER.info("Sucessfully ran the stable storage");
 		else
 			return false;
 			*/
@@ -89,10 +89,10 @@ public abstract class DKVFClient<Record extends GeneratedMessageV3, ServerMessag
 	public NetworkStatus sendToServer(String serverId, ClientMessage cm) {
 		try {
 			cm.writeDelimitedTo(serversOut.get(serverId));
-			frameworkLOGGER.finer(MessageFormat.format("Sent to server with id= {0} \n{1}", serverId, cm.toString()));
+			LOGGER.debug(MessageFormat.format("Sent to server with id= {0} \n{1}", serverId, cm.toString()));
 			return NetworkStatus.SUCCESS;
 		} catch (Exception e) {
-			frameworkLOGGER.warning(Utils.exceptionLogMessge(MessageFormat.format("Problem in sending to server with Id= {0}" , serverId), e));
+			LOGGER.warn(Utils.exceptionLogMessge(MessageFormat.format("Problem in sending to server with Id= {0}" , serverId), e));
 			return NetworkStatus.FAILURE;
 		}
 	}
@@ -107,12 +107,12 @@ public abstract class DKVFClient<Record extends GeneratedMessageV3, ServerMessag
 	public ClientReply readFromServer(String serverId) {
 		try {
 			ClientReply cr = (ClientReply) this.clientReplyParser.parseDelimitedFrom(serversIn.get(serverId));
-			frameworkLOGGER.finer(MessageFormat.format("READ from server with id= {0} \n{1}", serverId, cr.toString()));
+			LOGGER.debug(MessageFormat.format("READ from server with id= {0} \n{1}", serverId, cr.toString()));
 			return cr;
 		} catch (Exception e) {
 			//debug
-			frameworkLOGGER.warning("serversIn= " + serverId + " serversIn.get(serverId) = " + serversIn.get(serverId) + " serversOut.get(serverId)= " + serversOut.get(serverId));
-			frameworkLOGGER.warning(Utils.exceptionLogMessge(MessageFormat.format("Problem in reading response from server with Id= {0}" , serverId), e));
+			LOGGER.warn("serversIn= " + serverId + " serversIn.get(serverId) = " + serversIn.get(serverId) + " serversOut.get(serverId)= " + serversOut.get(serverId));
+			LOGGER.warn(Utils.exceptionLogMessge(MessageFormat.format("Problem in reading response from server with Id= {0}" , serverId), e));
 			return null;
 		}
 	}
