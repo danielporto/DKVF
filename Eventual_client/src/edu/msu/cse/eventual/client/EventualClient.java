@@ -6,11 +6,11 @@ import edu.msu.cse.dkvf.DKVFClient;
 import edu.msu.cse.dkvf.ServerConnector.NetworkStatus;
 import edu.msu.cse.dkvf.Utils;
 import edu.msu.cse.dkvf.config.ConfigReader;
-import edu.msu.cse.dkvf.metadata.Metadata;
-import edu.msu.cse.dkvf.metadata.Metadata.ClientMessage;
-import edu.msu.cse.dkvf.metadata.Metadata.PutMessage;
-import edu.msu.cse.dkvf.metadata.Metadata.GetMessage;
-import edu.msu.cse.dkvf.metadata.Metadata.ClientReply;
+import edu.msu.cse.dkvf.eventual.metadata.Metadata;
+import edu.msu.cse.dkvf.eventual.metadata.Metadata.ClientMessage;
+import edu.msu.cse.dkvf.eventual.metadata.Metadata.PutMessage;
+import edu.msu.cse.dkvf.eventual.metadata.Metadata.GetMessage;
+import edu.msu.cse.dkvf.eventual.metadata.Metadata.ClientReply;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.List;
@@ -23,7 +23,7 @@ public class EventualClient extends DKVFClient{
 	int numOfPartitions;
 	
 	public EventualClient(ConfigReader cnfReader) throws IllegalAccessException {
-		super(cnfReader, edu.msu.cse.dkvf.metadata.Metadata.Record.class, edu.msu.cse.dkvf.metadata.Metadata.ServerMessage.class, Metadata.ClientMessage.class, Metadata.ClientReply.class );
+		super(cnfReader, Metadata.Record.class, Metadata.ServerMessage.class, Metadata.ClientMessage.class, Metadata.ClientReply.class );
 		this.cnfReader = cnfReader;
 		HashMap<String, List<String>> protocolProperties = cnfReader.getProtocolProperties();
 		numOfPartitions = new Integer(protocolProperties.get("num_of_partitions").get(0));

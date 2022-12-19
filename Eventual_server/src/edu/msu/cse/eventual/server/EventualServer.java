@@ -5,8 +5,8 @@ import edu.msu.cse.dkvf.ClientMessageAgent;
 import edu.msu.cse.dkvf.DKVFServer;
 import edu.msu.cse.dkvf.Storage.StorageStatus;
 import edu.msu.cse.dkvf.config.ConfigReader;
-import edu.msu.cse.dkvf.metadata.Metadata;
-import edu.msu.cse.dkvf.metadata.Metadata.*;
+import edu.msu.cse.dkvf.eventual.metadata.Metadata;
+import edu.msu.cse.dkvf.eventual.metadata.Metadata.*;
 
 import java.text.MessageFormat;
 import java.util.ArrayList;
@@ -21,7 +21,7 @@ public class EventualServer extends DKVFServer {
 	int pId;
 
 	public EventualServer(ConfigReader cnfReader) throws IllegalAccessException {
-		super(cnfReader, edu.msu.cse.dkvf.metadata.Metadata.Record.class, edu.msu.cse.dkvf.metadata.Metadata.ServerMessage.class, Metadata.ClientMessage.class, Metadata.ClientReply.class);
+		super(cnfReader, Metadata.Record.class, Metadata.ServerMessage.class, Metadata.ClientMessage.class, Metadata.ClientReply.class);
 		this.cnfReader = cnfReader;
 		HashMap<String, List<String>> protocolProperties = cnfReader.getProtocolProperties();
 		numOfDatacenters = new Integer(protocolProperties.get("num_of_datacenters").get(0));
@@ -88,6 +88,7 @@ public class EventualServer extends DKVFServer {
 	}
 
 	public void handleServerMessage(GeneratedMessageV3 sm) {
+		System.out.println("EventualServer.handleServerMessage was called");
 		ServerMessage smc = (ServerMessage) sm;
 		Record newRecord = smc.getReplicateMessage().getRec();
 		insert(smc.getReplicateMessage().getKey(), newRecord);
