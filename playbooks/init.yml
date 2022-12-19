@@ -24,7 +24,7 @@
         executable: /bin/bash
         chdir: "../DKVF_core"
 
-    - name: Check resuling jar
+    - name: Check resulting jar
       delegate_to: 127.0.0.1
       run_once: yes
       stat:
