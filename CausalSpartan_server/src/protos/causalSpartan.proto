@@ -1,8 +1,8 @@
 syntax = "proto3";
 
-package Metadata; 
+package Metadata;
 
-option java_package = "edu.msu.cse.dkvf.metadata";
+option java_package = "edu.msu.cse.dkvf.causalspartan.metadata";
 option java_outer_classname = "Metadata";
 
 message DcTimeItem { // A pari of datacenter ID and timestamp
@@ -17,11 +17,11 @@ message Record {  // A record item
 	repeated DcTimeItem ds_item = 5;  //Dependency Set (DS)
 }
 
-
-//---------------Client messages---------------
-message GetMessage { 
+//-----------------------------------------------
+//---------------Client messages-----------------
+message GetMessage {
 	 string key =1;
-	 repeated int64 dsv_item = 2;  //Dependecy Stable Vector (DSV) at the client 
+	 repeated int64 dsv_item = 2;  //Dependecy Stable Vector (DSV) at the client
 }
 
 message PutMessage {
@@ -38,7 +38,6 @@ message ClientMessage {
 	}
  }
 //-----------------------------------------------
-
 //-----------------Client Reply------------------
 message GetReply{
 	bytes value = 1;
@@ -48,7 +47,7 @@ message GetReply{
 
 message PutReply{
 	int64 ut = 1;
-	int32 sr =2; 
+	int32 sr =2;
 }
 message ClientReply {
 	bool status = 1;
@@ -66,7 +65,7 @@ message ReplicateMessage {
 }
 
 message HeartbeatMessage {
-	int64 time = 1; 
+	int64 time = 1;
 	int32 dc_id = 2;
 }
 
@@ -82,9 +81,8 @@ message ServerMessage {
 	oneof message_type{
 		ReplicateMessage replicate_message = 1;
 		HeartbeatMessage heartbeat_message = 2;
-		VVMessage vv_message = 3; 
+		VVMessage vv_message = 3;
 		DSVMessage dsv_message = 4;
 	}
 }
 //-----------------------------------------------
-

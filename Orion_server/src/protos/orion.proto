@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package Metadata;
 
-option java_package = "edu.msu.cse.dkvf.metadata";
+option java_package = "edu.msu.cse.dkvf.orion.metadata";
 option java_outer_classname = "Metadata";
 
 message DcTimeItem { // A pari of datacenter ID and timestamp
@@ -17,7 +17,8 @@ message Record { // A record item
                  repeated DcTimeItem ds_item = 5; //Dependency Set (DS)
 }
 
-//---------------Client messages---------------
+//-----------------------------------------------
+//---------------Client messages-----------------
 message GetMessage {
     string key = 1;
     repeated int64 dsv_item = 2; //Dependecy Stable Vector (DSV) at the client
@@ -42,7 +43,6 @@ message ClientMessage {
     }
 }
 //-----------------------------------------------
-
 //-----------------Client Reply------------------
 message GetReply {
     bytes value = 1;
@@ -100,4 +100,3 @@ message ServerMessage {
     }
 }
 //-----------------------------------------------
-
