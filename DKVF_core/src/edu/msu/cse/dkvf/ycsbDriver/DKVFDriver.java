@@ -1,24 +1,15 @@
 package edu.msu.cse.dkvf.ycsbDriver;
 
-import java.lang.reflect.Constructor;
-import java.text.MessageFormat;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
-import java.util.Vector;
-
-import com.yahoo.ycsb.ByteArrayByteIterator;
-import com.yahoo.ycsb.ByteIterator;
-import com.yahoo.ycsb.DB;
-import com.yahoo.ycsb.DBException;
-import com.yahoo.ycsb.Status;
-
+import com.yahoo.ycsb.*;
 import edu.msu.cse.dkvf.DKVFClient;
 import edu.msu.cse.dkvf.config.ConfigReader;
 
+import java.lang.reflect.Constructor;
+import java.text.MessageFormat;
+import java.util.*;
+
 /**
- * The YCSB driver for DKVF. 
+ * The YCSB driver for DKVF.
  *
  */
 public class DKVFDriver extends DB {
@@ -48,8 +39,8 @@ public class DKVFDriver extends DB {
 	}
 
 	/**
-	 * Runs the YCSB client. 
-	 * @param cnfReader The configuration reader object. 
+	 * Runs the YCSB client.
+	 * @param cnfReader The configuration reader object.
 	 * @param clientClassName The name of the client class. It is the client side of key-value written by DKVF.
 	 * @throws DBException
 	 */
@@ -62,8 +53,7 @@ public class DKVFDriver extends DB {
 			this.client = client;
 		} catch (Exception e) {
 			e.printStackTrace();
-			throw new DBException("probelm in instantiating client object:");
-
+			throw new DBException("Problem in instantiating client object:");
 		}
 	}
 
@@ -90,7 +80,7 @@ public class DKVFDriver extends DB {
 	public Status read(String arg0, String arg1, Set<String> arg2, Map<String, ByteIterator> arg3) {
 		return Status.FORBIDDEN;
 	}
-	
+
 	@Override
 	public Status update(String arg0, String arg1, Map<String, ByteIterator> arg2) {
 		return insert(arg0, arg1, arg2);
@@ -98,9 +88,9 @@ public class DKVFDriver extends DB {
 	//-------------------
 
 	//----- DKVF workload calls the following functions-----------------
-	
+
 	/**
-	 * Updates the value. The same functionality as insert. 
+	 * Updates the value. The same functionality as insert.
 	 * @param key
 	 * @param value
 	 * @return The result of the operation
@@ -110,7 +100,7 @@ public class DKVFDriver extends DB {
 	}
 
 	/**
-	 * Inserts a value for a key. 
+	 * Inserts a value for a key.
 	 * @param key
 	 * @param value
 	 * @return The result of the operation
@@ -123,9 +113,9 @@ public class DKVFDriver extends DB {
 	}
 
 	/**
-	 * Reads the value of for a key. 
+	 * Reads the value of for a key.
 	 * @param key The key to read
-	 * @param resultValue The found value. Only the first element is used. 
+	 * @param resultValue The found value. Only the first element is used.
 	 * @return The result of the operation
 	 */
 	public Status read(String key, Set<ByteIterator> resultValue) {
@@ -135,8 +125,8 @@ public class DKVFDriver extends DB {
 		resultValue.add(new ByteArrayByteIterator(result));
 		return Status.OK;
 	}
-	
-	
+
+
 	public Status swap (String key1, String key2){return Status.OK;}
 
 	@Override

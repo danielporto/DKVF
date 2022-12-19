@@ -1,8 +1,6 @@
 package edu.msu.cse.dkvf;
 
 
-import com.google.protobuf.CodedInputStream;
-import com.google.protobuf.CodedOutputStream;
 import com.google.protobuf.GeneratedMessageV3;
 import edu.msu.cse.dkvf.ServerConnector.NetworkStatus;
 import edu.msu.cse.dkvf.config.ConfigReader;
@@ -17,7 +15,7 @@ import java.text.MessageFormat;
 public abstract class DKVFClient<Record extends GeneratedMessageV3, ServerMessage extends GeneratedMessageV3, ClientMessage extends GeneratedMessageV3, ClientReply extends GeneratedMessageV3> extends DKVFBase<Record, ServerMessage, ClientMessage, ClientReply> {
 	/**
 	 * The abstract method for putting a value with the given key.
-	 * 
+	 *
 	 * @param key
 	 *            The key of data to put
 	 * @param value
@@ -30,7 +28,7 @@ public abstract class DKVFClient<Record extends GeneratedMessageV3, ServerMessag
 
 	/**
 	 * The abstract method for getting a value with the given key.
-	 * 
+	 *
 	 * @param key
 	 *            The key of data to put
 	 * @return The value resulted for the give key. <br/>
@@ -44,45 +42,44 @@ public abstract class DKVFClient<Record extends GeneratedMessageV3, ServerMessag
 
 	/**
 	 * Runs server connector and storage.
-	 * 
+	 *
 	 * @return <b>true</b> if successful <br/>
 	 *         <b>false</b> if unsuccessful
 	 */
 	public boolean runAll() {
 		if (connectToServers() == NetworkStatus.SUCCESS){
 			frameworkLOGGER.info("Sucessfully ran the server connector");
-			
+
 		}
 		else
 			return false;
 		/* I comment here, for now. Later we need to add storage enable/disable in the XMLs
-		 * and disable it for YCSB experiments, because client threads share same folder that 
-		 * creates problems for lock. 
-		
-		
+		 * and disable it for YCSB experiments, because client threads share same folder that
+		 * creates problems for lock.
+
+
 		if (runDb() == StorageStatus.SUCCESS)
 			frameworkLOGGER.info("Sucessfully ran the stable storage");
 		else
 			return false;
 			*/
-		
+
 		/*
 		//debug
 		try {
-			
+
 			Thread.sleep(15000);
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}*/
-		
+
 		return true;
-		
 	}
 
 	/**
 	 * Sends a client message to the server with the given ID.
-	 * 
+	 *
 	 * @param serverId
 	 *            The ID of the destination server.
 	 * @param cm
@@ -91,10 +88,7 @@ public abstract class DKVFClient<Record extends GeneratedMessageV3, ServerMessag
 	 */
 	public NetworkStatus sendToServer(String serverId, ClientMessage cm) {
 		try {
-			((CodedOutputStream) serversOut.get(serverId)).writeInt32NoTag(cm.getSerializedSize());
-			cm.writeTo((CodedOutputStream) serversOut.get(serverId));
-			((CodedOutputStream) serversOut.get(serverId)).flush();
-			//cm.writeDelimitedTo(serversOut.get(serverId));
+			cm.writeDelimitedTo(serversOut.get(serverId));
 			frameworkLOGGER.finer(MessageFormat.format("Sent to server with id= {0} \n{1}", serverId, cm.toString()));
 			return NetworkStatus.SUCCESS;
 		} catch (Exception e) {
@@ -105,16 +99,16 @@ public abstract class DKVFClient<Record extends GeneratedMessageV3, ServerMessag
 
 	/**
 	 * Reads from input stream of the server with the given ID.
-	 * 
+	 *
 	 * @param serverId
 	 *            The ID of the server to read from its input stream.
 	 * @return The received ClientReply message.
 	 */
 	public ClientReply readFromServer(String serverId) {
 		try {
-			int size = ((CodedInputStream) serversIn.get(serverId)).readInt32();
-			byte[] result = ((CodedInputStream) serversIn.get(serverId)).readRawBytes(size);
-			return (ClientReply) clientMessageParser.parseFrom(result);
+			ClientReply cr = (ClientReply) this.clientReplyParser.parseDelimitedFrom(serversIn.get(serverId));
+			frameworkLOGGER.finer(MessageFormat.format("READ from server with id= {0} \n{1}", serverId, cr.toString()));
+			return cr;
 		} catch (Exception e) {
 			//debug
 			frameworkLOGGER.warning("serversIn= " + serverId + " serversIn.get(serverId) = " + serversIn.get(serverId) + " serversOut.get(serverId)= " + serversOut.get(serverId));

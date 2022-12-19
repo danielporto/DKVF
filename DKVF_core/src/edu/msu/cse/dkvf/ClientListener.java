@@ -14,12 +14,12 @@ public class ClientListener implements Runnable {
 	 * The port to listen for clients
 	 */
 	int port;
-	
+
 	/**
 	 * The protocol to run its client handler upon receiving a client message
 	 */
 	DKVFServer protocol;
-	
+
 	/**
 	 * The logger to use by client listener
 	 */
@@ -39,7 +39,7 @@ public class ClientListener implements Runnable {
 
 	@Override
 	/**
-	 * Listens for clients, and creates one thread for each client. 
+	 * Listens for clients, and creates one thread for each client.
 	 */
 	public void run() {
 		LOGGER.info("Start listening for clients at port: " + port);
@@ -57,7 +57,6 @@ public class ClientListener implements Runnable {
 				LOGGER.warning(MessageFormat.format(
 						"Problem in closing serverSocket to accept clients at port= {0} toString: {1} Message:\n{2}",
 						port, e1.toString(), " Message: " + e1.getMessage()));
-
 			}
 			return;
 		}

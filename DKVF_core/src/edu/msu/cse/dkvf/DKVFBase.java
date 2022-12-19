@@ -1,7 +1,5 @@
 package edu.msu.cse.dkvf;
 
-import com.google.protobuf.CodedInputStream;
-import com.google.protobuf.CodedOutputStream;
 import com.google.protobuf.GeneratedMessageV3;
 import com.google.protobuf.Parser;
 import edu.msu.cse.dkvf.ServerConnector.NetworkStatus;
@@ -10,6 +8,8 @@ import edu.msu.cse.dkvf.config.Config;
 import edu.msu.cse.dkvf.config.ConfigReader;
 import org.apache.commons.lang3.reflect.FieldUtils;
 
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.net.Socket;
 import java.text.MessageFormat;
@@ -52,12 +52,12 @@ public abstract class DKVFBase<Record extends GeneratedMessageV3, ServerMessage 
 	/**
 	 * The map of IDs of servers to their output streams.
 	 */
-	protected Map<String, CodedOutputStream> serversOut = new HashMap<>();
+	protected Map<String, OutputStream> serversOut = new HashMap<String, java.io.OutputStream>();
 
 	/**
 	 * The map of IDs of servers to their input streams.
 	 */
-	protected Map<String, CodedInputStream> serversIn = new HashMap<>();
+	protected Map<String, InputStream> serversIn = new HashMap<String, java.io.InputStream>();
 
 	/**
 	 * The map of IDs of servers to their socket objects.

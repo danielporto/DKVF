@@ -40,7 +40,7 @@ public class BDBStorage<Record extends GeneratedMessageV3> extends Storage<Recor
 	}
 
 	/**
-	 * Initializes the storage engine. 
+	 * Initializes the storage engine.
 	 * @param storageConfig The configuration for the storage engine
 	 * @param logger The logger
 	 * @return The result of the operation
@@ -82,7 +82,7 @@ public class BDBStorage<Record extends GeneratedMessageV3> extends Storage<Recor
 	}
 
 	/**
-	 * Makes the data base information stable by writing them to the disk. 
+	 * Makes the data base information stable by writing them to the disk.
 	 * @return The result of the operation
 	 */
 	public StorageStatus makeStable() {
@@ -122,7 +122,7 @@ public class BDBStorage<Record extends GeneratedMessageV3> extends Storage<Recor
 	}
 
 	/**
-	 * Closes the database. 
+	 * Closes the database.
 	 * @return The result of the operation
 	 */
 	public StorageStatus close() {
@@ -140,12 +140,12 @@ public class BDBStorage<Record extends GeneratedMessageV3> extends Storage<Recor
 			return StorageStatus.FAILURE;
 		}
 	}
-	
+
 	/**
 	 * Reads the first version of the data item with the given key that satisfies the given predicate.
-	 * @param key The key of the data item to read. 
-	 * @param p The predicate that need to be satisfied by the version. 
-	 * @param result The list of containing the version that satisfies the given predicate. Note that although it is a list, only the first element should be used. 
+	 * @param key The key of the data item to read.
+	 * @param p The predicate that need to be satisfied by the version.
+	 * @param result The list of containing the version that satisfies the given predicate. Note that although it is a list, only the first element should be used.
 	 * @return The result of the operation
 	 */
 	public StorageStatus read(String key, Predicate<Record> p, List<Record> result) {
@@ -183,12 +183,12 @@ public class BDBStorage<Record extends GeneratedMessageV3> extends Storage<Recor
 		}
 
 	}
-	
+
 	/**
 	 * Reads the all versions of the data item with the given key that satisfy the given predicate.
-	 * @param key The key of the data item to read. 
-	 * @param p The predicate that need to be satisfied by the versions. 
-	 * @param result The list of all versions that satisfy the given predicate. 
+	 * @param key The key of the data item to read.
+	 * @param p The predicate that need to be satisfied by the versions.
+	 * @param result The list of all versions that satisfy the given predicate.
 	 * @return The result of the operation
 	 */
 	public StorageStatus readAll(String key, Predicate<Record> p, List<Record> result) {
@@ -229,7 +229,7 @@ public class BDBStorage<Record extends GeneratedMessageV3> extends Storage<Recor
 	}
 
 	/**
-	 * Runs the storage engine. 
+	 * Runs the storage engine.
 	 * @return The result of the operation
 	 */
 	public StorageStatus run() {

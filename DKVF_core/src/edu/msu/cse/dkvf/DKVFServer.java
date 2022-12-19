@@ -1,8 +1,6 @@
 package edu.msu.cse.dkvf;
 
 
-import com.google.protobuf.CodedInputStream;
-import com.google.protobuf.CodedOutputStream;
 import com.google.protobuf.GeneratedMessageV3;
 import edu.msu.cse.dkvf.ServerConnector.NetworkStatus;
 import edu.msu.cse.dkvf.Storage.StorageStatus;
@@ -37,14 +35,14 @@ public abstract class DKVFServer<Record extends GeneratedMessageV3, ServerMessag
 	 * ID of this server.
 	 */
 	String id;
-	
-	
+
+
 	boolean synchCommunication = false;
-	
+
 	Map<String, ChannelManager> channelManagers = new HashMap<>();
 
 	/**
-	 * Constructor for DKVFServer  
+	 * Constructor for DKVFServer
 	 * @param cnfReader The configuration reader
 	 */
 	public DKVFServer(ConfigReader cnfReader, Class<Record> r, Class<ServerMessage> sm, Class<ClientMessage> cm, Class<ClientReply> cr) throws IllegalAccessException {
@@ -56,9 +54,9 @@ public abstract class DKVFServer<Record extends GeneratedMessageV3, ServerMessag
 	/**
 	 * Runs all service including server connector, storage, server and client
 	 * listeners.
-	 * 
+	 *
 	 * @return <b>true</b> if successful <br/>
-	 * 
+	 *
 	 *         <b>false</b> if unsuccessful
 	 */
 	public boolean runAll() {
@@ -71,7 +69,7 @@ public abstract class DKVFServer<Record extends GeneratedMessageV3, ServerMessag
 				return false;
 			}
 		}
-		
+
 		//asynchronous channels are always enalbled.
 		if (setupChannelManagers() == NetworkStatus.SUCCESS)
 			frameworkLOGGER.info("Sucessfully ran server channel managers.");
@@ -116,7 +114,7 @@ public abstract class DKVFServer<Record extends GeneratedMessageV3, ServerMessag
 
 	/**
 	 * Runs listeners for servers and clients.
-	 * 
+	 *
 	 * @return The result of the operation
 	 */
 	public NetworkStatus runListeners() {
@@ -124,7 +122,7 @@ public abstract class DKVFServer<Record extends GeneratedMessageV3, ServerMessag
 			frameworkLOGGER.info("Sucessfully run the server listener");
 		else
 			return NetworkStatus.FAILURE;
-			
+
 		if (runClientListener() == NetworkStatus.SUCCESS)
 			frameworkLOGGER.info("Sucessfully run the client listener");
 		else
@@ -139,13 +137,13 @@ public abstract class DKVFServer<Record extends GeneratedMessageV3, ServerMessag
 	}
 
 	/**
-	 * Sends a server message to the server with the given ID. 
-	 * It guarantees that all messages are delivered. 
+	 * Sends a server message to the server with the given ID.
+	 * It guarantees that all messages are delivered.
 	 * It also guarantees FIFO delivery.
-	 * It does not wait to actually send the message. Instead, it immediately returns.  
-	 * However, each channel has a capacity defined by configuration file 
-	 * that if reached, no more message can be added to the channel, and protocol designer must deal with it.  
-	 * 
+	 * It does not wait to actually send the message. Instead, it immediately returns.
+	 * However, each channel has a capacity defined by configuration file
+	 * that if reached, no more message can be added to the channel, and protocol designer must deal with it.
+	 *
 	 * @param serverId
 	 *            The ID of the destination server.
 	 * @param sm
@@ -166,13 +164,13 @@ public abstract class DKVFServer<Record extends GeneratedMessageV3, ServerMessag
 			return NetworkStatus.FAILURE;
 		}
 	}
-	
-	
+
+
 	/**
-	 * Sends a server message to the server with the given ID. 
+	 * Sends a server message to the server with the given ID.
 	 * It does not guarantees delivery. It should be used for messages that tolerate loss.
 	 * @param serverId
-	 * 			The ID of the destination server. 
+	 * 			The ID of the destination server.
 	 * @param sm
 	 * 			The client message to send
 	 * @return The result of the operation
@@ -181,10 +179,7 @@ public abstract class DKVFServer<Record extends GeneratedMessageV3, ServerMessag
 		if (serversOut.containsKey(serverId)) {
 			try {
 				synchronized (serversOut.get(serverId)) {
-					((CodedOutputStream) serversOut.get(serverId)).writeInt32NoTag(sm.getSerializedSize());
-					sm.writeTo((CodedOutputStream) serversOut.get(serverId));
-					((CodedOutputStream) serversOut.get(serverId)).flush();
-					//sm.writeDelimitedTo(serversOut.get(serverId));
+					sm.writeDelimitedTo(serversOut.get(serverId));
 					frameworkLOGGER.finest(MessageFormat.format("Sent to server with id= {0} \n{1}", serverId, sm.toString()));
 					return NetworkStatus.SUCCESS;
 				}
@@ -202,10 +197,10 @@ public abstract class DKVFServer<Record extends GeneratedMessageV3, ServerMessag
 			return NetworkStatus.FAILURE;
 		}
 	}
-	
+
 	/**
 	 * Reads from input stream of the server with the given ID.
-	 * 
+	 *
 	 * @param serverId
 	 *            The ID of the server to read from its input stream.
 	 * @return The received ServerMessage object.
@@ -215,10 +210,7 @@ public abstract class DKVFServer<Record extends GeneratedMessageV3, ServerMessag
 			try {
 				ServerMessage sm;
 				synchronized (serversIn.get(serverId)) {
-					int size = ((CodedInputStream) serversIn.get(serverId)).readInt32();
-					byte[] newMessageBytes = ((CodedInputStream) serversIn.get(serverId)).readRawBytes(size);
-					sm = this.serverMessageParser.parseFrom(newMessageBytes);
-					//sm = ServerMessage.parseDelimitedFrom(serversIn.get(serverId));
+					sm = this.serverMessageParser.parseDelimitedFrom(serversIn.get(serverId));
 					frameworkLOGGER.finer(MessageFormat.format("Read from server with id={0} \n{1}", serverId, sm.toString()));
 				}
 				return sm;
@@ -234,7 +226,7 @@ public abstract class DKVFServer<Record extends GeneratedMessageV3, ServerMessag
 	}
 	/**
 	 * Runs the control listener thread.
-	 * 
+	 *
 	 * @return The result of the operation.
 	 */
 	private NetworkStatus runControlListener() {
@@ -248,7 +240,7 @@ public abstract class DKVFServer<Record extends GeneratedMessageV3, ServerMessag
 			return NetworkStatus.FAILURE;
 		}
 	}
-	
+
 	/**
 	 * Runs listener for incoming server messages
 	 * @return The result of the operation
@@ -267,7 +259,7 @@ public abstract class DKVFServer<Record extends GeneratedMessageV3, ServerMessag
 
 	/**
 	 * Runs the listener for clients.
-	 * 
+	 *
 	 * @return The result of the operation.
 	 */
 	private NetworkStatus runClientListener() {
@@ -285,7 +277,7 @@ public abstract class DKVFServer<Record extends GeneratedMessageV3, ServerMessag
 	/**
 	 * This message will be called for any incoming client message. Any protocol
 	 * needs to implement this method.
-	 * 
+	 *
 	 * @param cma
 	 *            The received client message
 	 */
@@ -294,7 +286,7 @@ public abstract class DKVFServer<Record extends GeneratedMessageV3, ServerMessag
 	/**
 	 * This message will be called for any incoming server message. Any protocol
 	 * needs to implement this method.
-	 * 
+	 *
 	 * @param sm
 	 *            The received server message
 	 */
@@ -303,7 +295,7 @@ public abstract class DKVFServer<Record extends GeneratedMessageV3, ServerMessag
 	/**
 	 * This method will be called for any unknown control message. A protocol
 	 * can override this method to use control channel.
-	 * 
+	 *
 	 * @param cm
 	 *            The received control message.
 	 * @return The reply to the control message.
@@ -328,7 +320,7 @@ public abstract class DKVFServer<Record extends GeneratedMessageV3, ServerMessag
 
 	/**
 	 * Gets the number of clients counter value.
-	 * 
+	 *
 	 * @return Number of clients connected to this server
 	 */
 	public int getNumberOfClients() {
@@ -351,7 +343,7 @@ public abstract class DKVFServer<Record extends GeneratedMessageV3, ServerMessag
 
 	/**
 	 * Gets the number of servers counter value.
-	 * 
+	 *
 	 * @return Number of servers connected to this server
 	 */
 	public int getNumberOfServers() {
@@ -360,7 +352,7 @@ public abstract class DKVFServer<Record extends GeneratedMessageV3, ServerMessag
 
 	/**
 	 * Gets the server ID.
-	 * 
+	 *
 	 * @return The ID of the server
 	 */
 	public String getId() {
@@ -370,7 +362,7 @@ public abstract class DKVFServer<Record extends GeneratedMessageV3, ServerMessag
 	/**
 	 * Gets the number of servers that are expected this server to connect
 	 * according to the configuration.
-	 * 
+	 *
 	 * @return The number of expected servers to connect
 	 */
 	public int getNumOfExpectedServers() {

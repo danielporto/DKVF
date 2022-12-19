@@ -1,8 +1,6 @@
 package edu.msu.cse.dkvf;
 
 
-import com.google.protobuf.CodedInputStream;
-import com.google.protobuf.CodedOutputStream;
 import com.google.protobuf.GeneratedMessageV3;
 
 import java.net.Socket;
@@ -20,7 +18,7 @@ public class ClientHandler<ClientMessage extends GeneratedMessageV3> implements 
 	Socket clientSocket;
 	Logger LOGGER;
 	/**
-	 * Constructor for ClientHandler. 
+	 * Constructor for ClientHandler.
 	 * @param clientSocket The Socket object of the client
 	 * @param protocol The Protocol object that is used to handle client requests
 	 * @param logger The logger
@@ -38,19 +36,15 @@ public class ClientHandler<ClientMessage extends GeneratedMessageV3> implements 
 	 */
 	public void run() {
 		try {
-			CodedInputStream in = CodedInputStream.newInstance(clientSocket.getInputStream());
-			CodedOutputStream out = CodedOutputStream.newInstance(clientSocket.getOutputStream());
 			while (true) {
-				int size = in.readInt32();
-				byte[] newMessageBytes = in.readRawBytes(size);
-				ClientMessage cm = (ClientMessage) this.protocol.clientMessageParser.parseFrom(newMessageBytes);
+				ClientMessage cm = (ClientMessage) this.protocol.clientMessageParser.parseDelimitedFrom(clientSocket.getInputStream());
 				if (cm == null) {
 					LOGGER.info("Null message from client");
 					protocol.decrementNumberOfClients();
 					return;
 				}
-				LOGGER.finer(MessageFormat.format("New clinet message arrived:\n{0}", cm.toString()));
-				ClientMessageAgent cma = new ClientMessageAgent(cm, out, LOGGER);
+				LOGGER.finer(MessageFormat.format("New client message arrived:\n{0}", cm.toString()));
+				ClientMessageAgent cma = new ClientMessageAgent(cm, clientSocket.getOutputStream(), LOGGER);
 				protocol.handleClientMessage(cma);
 			}
 		} catch (Exception e) {
