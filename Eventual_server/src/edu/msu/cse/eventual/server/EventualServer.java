@@ -39,11 +39,12 @@ public class EventualServer extends DKVFServer {
 	}
 
 	private void handlePutMessage(ClientMessageAgent cma) {
+		System.out.println("EventualServer.handlePutMessage");
 		Metadata.ClientMessage cmsg = (Metadata.ClientMessage) cma.getClientMessage();
-		Record.Builder builder = Record.newBuilder();
+		Metadata.Record.Builder builder = Metadata.Record.newBuilder();
 		builder.setValue(cmsg.getPutMessage().getValue());
 		builder.setUt(System.currentTimeMillis());
-		Record rec = builder.build();
+		Metadata.Record rec = builder.build();
 		StorageStatus ss = insert(cmsg.getPutMessage().getKey(), rec);
 
 		ClientReply cr = null;
@@ -58,7 +59,7 @@ public class EventualServer extends DKVFServer {
 		sendReplicateMessages(cmsg.getPutMessage().getKey(), rec);
 	}
 
-	private void sendReplicateMessages(String key, Record recordToReplicate) {
+	private void sendReplicateMessages(String key, Metadata.Record recordToReplicate) {
 		ServerMessage sm = ServerMessage.newBuilder().setReplicateMessage(ReplicateMessage.newBuilder().setKey(key).setRec(recordToReplicate)).build();
 		for (int i = 0; i < numOfDatacenters; i++) {
 			if (i == dcId)
@@ -71,15 +72,16 @@ public class EventualServer extends DKVFServer {
 	}
 
 	private void handleGetMessage(ClientMessageAgent cma) {
+		System.out.println("EventualServer.handleGetMessage");
 		Metadata.ClientMessage cmsg = (Metadata.ClientMessage) cma.getClientMessage();
 		GetMessage gm = cmsg.getGetMessage();
-		List<Record> result = new ArrayList<>();
+		List<Metadata.Record> result = new ArrayList<>();
 		StorageStatus ss = read(gm.getKey(), p -> {
 			return true;
 		}, result);
 		ClientReply cr = null;
 		if (ss == StorageStatus.SUCCESS) {
-			Record rec = result.get(0);
+			Metadata.Record rec = result.get(0);
 			cr = ClientReply.newBuilder().setStatus(true).setGetReply(GetReply.newBuilder().setValue(rec.getValue())).build();
 		} else {
 			cr = ClientReply.newBuilder().setStatus(false).build();
@@ -90,7 +92,7 @@ public class EventualServer extends DKVFServer {
 	public void handleServerMessage(GeneratedMessageV3 sm) {
 		System.out.println("EventualServer.handleServerMessage was called");
 		ServerMessage smc = (ServerMessage) sm;
-		Record newRecord = smc.getReplicateMessage().getRec();
+		Metadata.Record newRecord = smc.getReplicateMessage().getRec();
 		insert(smc.getReplicateMessage().getKey(), newRecord);
 	}
 
