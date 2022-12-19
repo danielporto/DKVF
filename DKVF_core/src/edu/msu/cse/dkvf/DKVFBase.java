@@ -126,7 +126,6 @@ public abstract class DKVFBase<Record extends GeneratedMessageV3, ServerMessage 
 		} catch (ClassNotFoundException | InstantiationException | IllegalAccessException | NoSuchMethodException |
 				 InvocationTargetException e) {
 			throw new RuntimeException("Problem in setting up the storage", e);
-
 		}
 	}
 

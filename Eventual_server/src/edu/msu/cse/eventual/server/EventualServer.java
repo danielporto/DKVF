@@ -95,6 +95,4 @@ public class EventualServer extends DKVFServer {
 		Metadata.Record newRecord = smc.getReplicateMessage().getRec();
 		insert(smc.getReplicateMessage().getKey(), newRecord);
 	}
-
-
 }
