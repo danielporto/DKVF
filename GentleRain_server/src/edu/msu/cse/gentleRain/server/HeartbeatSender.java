@@ -1,7 +1,7 @@
 package edu.msu.cse.gentleRain.server;
 
-import edu.msu.cse.dkvf.metadata.Metadata.HeartbeatMessage;
-import edu.msu.cse.dkvf.metadata.Metadata.ServerMessage;
+import edu.msu.cse.dkvf.gentlerain.metadata.Metadata.HeartbeatMessage;
+import edu.msu.cse.dkvf.gentlerain.metadata.Metadata.ServerMessage;
 
 public class HeartbeatSender implements Runnable {
 	GentleRainServer server;

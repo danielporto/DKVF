@@ -11,19 +11,14 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Predicate;
 
+import com.google.protobuf.GeneratedMessageV3;
 import edu.msu.cse.dkvf.ClientMessageAgent;
 import edu.msu.cse.dkvf.DKVFServer;
 import edu.msu.cse.dkvf.Storage.StorageStatus;
+
 import edu.msu.cse.dkvf.config.ConfigReader;
-import edu.msu.cse.dkvf.metadata.Metadata.ClientReply;
-import edu.msu.cse.dkvf.metadata.Metadata.GSTMessage;
-import edu.msu.cse.dkvf.metadata.Metadata.GetMessage;
-import edu.msu.cse.dkvf.metadata.Metadata.GetReply;
-import edu.msu.cse.dkvf.metadata.Metadata.PutMessage;
-import edu.msu.cse.dkvf.metadata.Metadata.PutReply;
-import edu.msu.cse.dkvf.metadata.Metadata.Record;
-import edu.msu.cse.dkvf.metadata.Metadata.ReplicateMessage;
-import edu.msu.cse.dkvf.metadata.Metadata.ServerMessage;
+import edu.msu.cse.dkvf.gentlerain.metadata.Metadata;
+import edu.msu.cse.dkvf.gentlerain.metadata.Metadata.*;
 
 public class GentleRainServer extends DKVFServer {
 	AtomicLong gst = new AtomicLong(0);
@@ -50,8 +45,8 @@ public class GentleRainServer extends DKVFServer {
 	Object putLock = new Object(); // It is necessary to make sure that replicates are send
 	// FIFO
 
-	public GentleRainServer(ConfigReader cnfReader) {
-		super(cnfReader);
+	public GentleRainServer(ConfigReader cnfReader) throws IllegalAccessException {
+		super(cnfReader, Metadata.Record.class, Metadata.ServerMessage.class, Metadata.ClientMessage.class, Metadata.ClientReply.class);
 		HashMap<String, List<String>> protocolProperties = cnfReader.getProtocolProperties();
 
 		dcId = new Integer(protocolProperties.get("dc_id").get(0));
@@ -95,16 +90,18 @@ public class GentleRainServer extends DKVFServer {
 
 	@Override
 	public void handleClientMessage(ClientMessageAgent cma) {
-		if (cma.getClientMessage().hasGetMessage()) {
+		Metadata.ClientMessage cmsg = (Metadata.ClientMessage) cma.getClientMessage();
+		if (cmsg.hasGetMessage()) {
 			handleGetMessage(cma);
-		} else if (cma.getClientMessage().hasPutMessage()) {
+		} else if (cmsg.hasPutMessage()) {
 			handlePutMessage(cma);
 
 		}
 	}
 
 	@Override
-	public void handleServerMessage(ServerMessage sm) {
+	public void handleServerMessage(GeneratedMessageV3 smv) {
+		ServerMessage sm = (ServerMessage) smv;
 		if (sm.hasReplicateMessage()) {
 			handleReplicateMessage(sm);
 		} else if (sm.hasHeartbeatMessage()) {
@@ -118,13 +115,14 @@ public class GentleRainServer extends DKVFServer {
 	}
 
 	private void handleGetMessage(ClientMessageAgent cma) {
-		GetMessage gm = cma.getClientMessage().getGetMessage();
+		Metadata.ClientMessage cmsg = (Metadata.ClientMessage) cma.getClientMessage();
+		GetMessage gm = cmsg.getGetMessage();
 		updateGst(gm.getGst());
-		List<Record> result = new ArrayList<>();
+		List<Metadata.Record> result = new ArrayList<>();
 		StorageStatus ss = read(gm.getKey(), isVisible, result);
 		ClientReply cr = null;
 		if (ss == StorageStatus.SUCCESS) {
-			Record rec = result.get(0);
+			Metadata.Record rec = result.get(0);
 			cr = ClientReply.newBuilder().setStatus(true).setGetReply(GetReply.newBuilder().setValue(rec.getValue()).setUt(rec.getUt()).setGst(gst.get())).build();
 		} else {
 			cr = ClientReply.newBuilder().setStatus(false).build();
@@ -132,7 +130,7 @@ public class GentleRainServer extends DKVFServer {
 		cma.sendReply(cr);
 	}
 
-	Predicate<Record> isVisible = (Record r) -> {
+	Predicate<Metadata.Record> isVisible = (Metadata.Record r) -> {
 		LOGGER.debug(MessageFormat.format("record ut= {0}, Current GST={1}", r.getUt(), gst.get()));
 		if (dcId == r.getSr() || r.getUt() <= gst.get())
 			return true;
@@ -153,7 +151,8 @@ public class GentleRainServer extends DKVFServer {
 	}
 
 	private void handlePutMessage(ClientMessageAgent cma) {
-		PutMessage pm = cma.getClientMessage().getPutMessage();
+		Metadata.ClientMessage cmsg = (Metadata.ClientMessage) cma.getClientMessage();
+		PutMessage pm = cmsg.getPutMessage();
 		long sleepTime = pm.getDt() - System.currentTimeMillis();
 		try {
 			if (sleepTime > 0){
@@ -164,10 +163,10 @@ public class GentleRainServer extends DKVFServer {
 			LOGGER.fatal("Failed to delay write operation.");
 		}
 		vv.get(dcId).set(System.currentTimeMillis());
-		Record rec = null;
+		Metadata.Record rec = null;
 
 		synchronized (putLock) {
-			rec = Record.newBuilder().setValue(pm.getValue()).setUt(vv.get(dcId).get()).setSr(dcId).build();
+			rec = Metadata.Record.newBuilder().setValue(pm.getValue()).setUt(vv.get(dcId).get()).setSr(dcId).build();
 			sendReplicateMessages(pm.getKey(),rec); // The order is different than the paper
 										// algorithm. We first send replicate to
 										// insure a version with smaller
@@ -185,7 +184,7 @@ public class GentleRainServer extends DKVFServer {
 
 	}
 
-	private void sendReplicateMessages(String key, Record recordToReplicate) {
+	private void sendReplicateMessages(String key, Metadata.Record recordToReplicate) {
 		ServerMessage sm = ServerMessage.newBuilder().setReplicateMessage(ReplicateMessage.newBuilder().setDcId(dcId).setKey(key).setRec(recordToReplicate)).build();
 		for (int i = 0; i < numOfDatacenters; i++) {
 			if (i == dcId)
@@ -200,7 +199,7 @@ public class GentleRainServer extends DKVFServer {
 	private void handleReplicateMessage(ServerMessage sm) {
 		LOGGER.debug(MessageFormat.format("Received replicate message: {0}", sm.toString()));
 		int senderDcId = sm.getReplicateMessage().getDcId();
-		Record d = sm.getReplicateMessage().getRec();
+		Metadata.Record d = sm.getReplicateMessage().getRec();
 		insert(sm.getReplicateMessage().getKey(), d);
 		vv.get(senderDcId).set(d.getUt());
 	}
