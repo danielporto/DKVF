@@ -12,11 +12,8 @@ import edu.msu.cse.dkvf.DKVFClient;
 import edu.msu.cse.dkvf.ServerConnector.NetworkStatus;
 import edu.msu.cse.dkvf.Utils;
 import edu.msu.cse.dkvf.config.ConfigReader;
-import edu.msu.cse.dkvf.metadata.Metadata.ClientMessage;
-import edu.msu.cse.dkvf.metadata.Metadata.ClientReply;
-import edu.msu.cse.dkvf.metadata.Metadata.Dependency;
-import edu.msu.cse.dkvf.metadata.Metadata.GetMessage;
-import edu.msu.cse.dkvf.metadata.Metadata.PutMessage;
+import edu.msu.cse.dkvf.cops.metadata.Metadata;
+import edu.msu.cse.dkvf.cops.metadata.Metadata.*;
 
 public class COPSClient extends  DKVFClient{
 
@@ -25,8 +22,8 @@ public class COPSClient extends  DKVFClient{
 
 	HashMap<String, Long> nearest;
 
-	public COPSClient(ConfigReader cnfReader) {
-		super(cnfReader);
+	public COPSClient(ConfigReader cnfReader) throws IllegalAccessException {
+		super(cnfReader, Metadata.Record.class, Metadata.ServerMessage.class, Metadata.ClientMessage.class, Metadata.ClientReply.class );
 		HashMap<String, List<String>> protocolProperties = cnfReader.getProtocolProperties();
 		numOfPartitions = new Integer(protocolProperties.get("num_of_partitions").get(0));
 		dcId = new Integer(protocolProperties.get("dc_id").get(0));
@@ -42,7 +39,7 @@ public class COPSClient extends  DKVFClient{
 			String serverId = dcId + "_" + partition;
 			if (sendToServer(serverId, cm) == NetworkStatus.FAILURE)
 				return false;
-			ClientReply cr = readFromServer(serverId);
+			ClientReply cr = (ClientReply) readFromServer(serverId);
 			if (cr != null && cr.getStatus()) {
 				nearest.clear();
 				nearest.put(key, cr.getPutReply().getVersion());
@@ -66,7 +63,7 @@ public class COPSClient extends  DKVFClient{
 			String serverId = dcId + "_" + partition;
 			if (sendToServer(serverId, cm) == NetworkStatus.FAILURE)
 				return null;
-			ClientReply cr = readFromServer(serverId);
+			ClientReply cr = (ClientReply) readFromServer(serverId);
 			if (cr != null && cr.getStatus()) {
 				updateNearest(key, cr.getGetReply().getRecord().getVersion());
 				return cr.getGetReply().getRecord().getValue().toByteArray();
