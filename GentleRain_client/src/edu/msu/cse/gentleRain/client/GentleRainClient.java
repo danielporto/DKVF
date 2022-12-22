@@ -10,11 +10,8 @@ import edu.msu.cse.dkvf.DKVFClient;
 import edu.msu.cse.dkvf.Utils;
 import edu.msu.cse.dkvf.ServerConnector.NetworkStatus;
 import edu.msu.cse.dkvf.config.ConfigReader;
-import edu.msu.cse.dkvf.metadata.Metadata.ClientMessage;
-import edu.msu.cse.dkvf.metadata.Metadata.ClientReply;
-import edu.msu.cse.dkvf.metadata.Metadata.GetMessage;
-import edu.msu.cse.dkvf.metadata.Metadata.PutMessage;
-
+import edu.msu.cse.dkvf.gentlerain.metadata.Metadata;
+import edu.msu.cse.dkvf.gentlerain.metadata.Metadata.*;
 
 public class GentleRainClient extends DKVFClient {
 
@@ -27,8 +24,8 @@ public class GentleRainClient extends DKVFClient {
 	//This is just for test to enforce round-robin writes
 	int currentPartition = 0;
 
-	public GentleRainClient(ConfigReader cnfReader) {
-		super(cnfReader);
+	public GentleRainClient(ConfigReader cnfReader) throws IllegalAccessException {
+		super(cnfReader, Metadata.Record.class, Metadata.ServerMessage.class, Metadata.ClientMessage.class, Metadata.ClientReply.class );
 		HashMap<String, List<String>> protocolProperties = cnfReader.getProtocolProperties();
 		numOfPartitions = new Integer(protocolProperties.get("num_of_partitions").get(0));
 		dcId = new Integer(protocolProperties.get("dc_id").get(0));
@@ -44,7 +41,7 @@ public class GentleRainClient extends DKVFClient {
 			String serverId = dcId + "_" + partition;
 			if (sendToServer(serverId, cm) == NetworkStatus.FAILURE)
 				return false;
-			ClientReply cr = readFromServer(serverId);
+			ClientReply cr = (ClientReply) readFromServer(serverId);
 			if (cr != null && cr.getStatus()) {
 				dt = Math.max(dt, cr.getPutReply().getUt());
 				return true;
@@ -67,7 +64,7 @@ public class GentleRainClient extends DKVFClient {
 			String serverId = dcId + "_" + partition;
 			if (sendToServer(serverId, cm) == NetworkStatus.FAILURE)
 				return null;
-			ClientReply cr = readFromServer(serverId);
+			ClientReply cr = (ClientReply) readFromServer(serverId);
 			if (cr != null && cr.getStatus()){
 				dt = Math.max(dt, cr.getPutReply().getUt());
 				gst = Math.max(gst, cr.getGetReply().getGst());
