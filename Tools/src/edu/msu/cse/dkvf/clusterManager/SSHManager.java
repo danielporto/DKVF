@@ -19,8 +19,12 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.Vector;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 public class SSHManager {
-	private static final Logger LOGGER = Logger.getLogger(SSHManager.class.getName());
+	private static final Logger LOGGER = LogManager.getLogger(SSHManager.class);
+
 	private JSch jschSSHChannel;
 	private String strUserName;
 	private String strConnectionIP;

@@ -89,7 +89,6 @@ public abstract class DKVFBase<Record extends GeneratedMessageV3, ServerMessage 
 		this.clientMessageParser = (Parser<ClientMessage>) FieldUtils.readStaticField(this.clientMessageClass, "PARSER", true);
 		this.clientReplyClass = cr;
 		this.clientReplyParser = (Parser<ClientReply>) FieldUtils.readStaticField(this.clientReplyClass, "PARSER", true);
-		setupLogging();
 		setupStorage();
 	}
 
@@ -106,15 +105,6 @@ public abstract class DKVFBase<Record extends GeneratedMessageV3, ServerMessage 
 			throw new RuntimeException("Problem in setting up the storage", e);
 		}
 	}
-
-	/**
-	 * Sets up the logging.
-	 */
-	private void setupLogging() {
-
-	}
-
-
 
 	// DB management
 	/**
