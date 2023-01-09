@@ -87,7 +87,6 @@ public class EventualServer extends DKVFServer {
 	}
 
 	public void handleServerMessage(GeneratedMessageV3 sm) {
-		System.out.println("EventualServer.handleServerMessage was called");
 		ServerMessage smc = (ServerMessage) sm;
 		Metadata.Record newRecord = smc.getReplicateMessage().getRec();
 		insert(smc.getReplicateMessage().getKey(), newRecord);

@@ -5,7 +5,8 @@
     <server_port>{{ topology['servers'][inventory_hostname].server_port }}</server_port>
     <control_port>{{ topology['servers'][inventory_hostname].control_port }}</control_port>
     <connect_to>{% for server in topology['servers'][inventory_hostname].server_to_server_conections %} 
-        <server id="{{ topology['servers'][server].id }}" ip="{{ hostvars[server].ansible_host }}" port="{{ topology['servers'][server].server_port }}"/>{% endfor %} 
+        <server id="{{ topology['servers'][server].id }}_{{ topology['servers'][inventory_hostname].protocol_settings['p_id'] }}" ip="{{ hostvars[server].ansible_host }}" port="{{ topology['servers'][server].server_port }}"/>{% endfor %}
+
     </connect_to>
     <protocol_properties>{% for property in topology['servers'][inventory_hostname].protocol_settings %} 
         <property key="{{ property }}" value="{{topology['servers'][inventory_hostname].protocol_settings[property] }}"/>{% endfor %}
