@@ -19,7 +19,7 @@
     debug: 
       msg:  "{{ stop_processes.stdout }}"
 
-  - name: Stop datastore servers
+  - name: Stop clients
     ansible.builtin.shell: |
       kill -9 {{stop_processes.stdout}}
     args:

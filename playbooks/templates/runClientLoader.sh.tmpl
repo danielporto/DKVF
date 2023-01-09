@@ -6,5 +6,4 @@
     -P workload.conf \
     -p clientClassName={{ clientClassName[protocol] }} \
     -p clientConfigFile=client{{ topology['clients'][inventory_hostname].id }}.conf \
-                 > client{{topology['clients'][inventory_hostname].id}}_loader.result \
-                 2> client{{topology['clients'][inventory_hostname].id}}_loader.error
+     2>&1 | tee -a  loader{{topology['clients'][inventory_hostname].id}}.log

@@ -6,6 +6,7 @@ ycsb_operations: 10
 ycsb_duration: 60
 ycsb_database_size: 100
 ycsb_threads_per_client: 1
+tmux_path: "/opt/homebrew/bin"
 
 clientClassName:
   Eventual: "edu.msu.cse.eventual.client.EventualClient"
