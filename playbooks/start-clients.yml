@@ -12,17 +12,17 @@
 
   - name: Check if processes are already started
     ansible.builtin.shell: |
-      ps -ax | grep -E '{{protocol}}_client' | grep "client{{ topology['clients'][inventory_hostname].id }}.conf" | grep -v grep | awk '{print $1}' | tr '\n' ' '          
+      ps -ax | grep -E '{{protocol}}_client' | grep "client{{ topology['clients'][inventory_hostname].id }}.conf" | grep -v grep | awk '{print $1}' | tr '\n' ' '
 
     args:
       executable: /bin/bash
-    register: start_processes 
+    register: start_processes
 
   - name: IDs of processes to skip starting
-    debug: 
+    debug:
       msg:  "{{ start_processes.stdout }}"
 
-  - name: Start datastore servers
+  - name: Start datastore clients
     ansible.builtin.shell: |
       {{tmux_path}}/tmux new-session -s client{{ topology['clients'][inventory_hostname].id }} -d {{ default_install_dir }}/{{ protocol }}/{{inventory_hostname}}/runClient{{ topology['clients'][inventory_hostname].id }}.sh
     args:
