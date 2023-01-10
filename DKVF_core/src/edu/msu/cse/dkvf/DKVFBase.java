@@ -31,7 +31,7 @@ public abstract class DKVFBase<Record extends GeneratedMessageV3, ServerMessage 
 
 	protected final Class<ServerMessage> serverMessageClass;
 	protected final Parser<ServerMessage> serverMessageParser;
-	protected final Class<ServerMessage> recordClass;
+	protected final Class<Record> recordClass;
 	protected final Parser<Record> recordParser;
 	protected final Class<ClientMessage> clientMessageClass;
 	protected final Parser<ClientMessage> clientMessageParser;
@@ -81,7 +81,7 @@ public abstract class DKVFBase<Record extends GeneratedMessageV3, ServerMessage 
 	public DKVFBase(ConfigReader cnfReader, Class<Record> r, Class<ServerMessage> sm, Class<ClientMessage> cm, Class<ClientReply> cr) throws IllegalAccessException {
 		this.cnfReader = cnfReader;
 		this.cnf = cnfReader.getConfig();
-		this.recordClass = sm;
+		this.recordClass = r;
 		this.recordParser = (Parser<Record>) FieldUtils.readStaticField(this.recordClass, "PARSER", true);
 		this.serverMessageClass = sm;
 		this.serverMessageParser = (Parser<ServerMessage>) FieldUtils.readStaticField(this.serverMessageClass, "PARSER", true);
