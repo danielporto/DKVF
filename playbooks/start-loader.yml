@@ -22,7 +22,7 @@
     debug: 
       msg:  "{{ start_processes.stdout }}"
 
-  - name: Start datastore servers
+  - name: Start loaders
     ansible.builtin.shell: |
       {{tmux_path}}/tmux new-session -s loader{{ topology['clients'][inventory_hostname].id }} -d {{ default_install_dir }}/{{ protocol }}/{{inventory_hostname}}/runClientLoader{{ topology['clients'][inventory_hostname].id }}.sh
     args:

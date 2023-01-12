@@ -22,7 +22,7 @@
     debug:
       msg:  "{{ start_processes.stdout }}"
 
-  - name: Start datastore clients
+  - name: Start clients
     ansible.builtin.shell: |
       {{tmux_path}}/tmux new-session -s client{{ topology['clients'][inventory_hostname].id }} -d {{ default_install_dir }}/{{ protocol }}/{{inventory_hostname}}/runClient{{ topology['clients'][inventory_hostname].id }}.sh
     args:
