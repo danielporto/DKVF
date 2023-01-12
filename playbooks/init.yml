@@ -15,6 +15,14 @@
         - "{{ default_install_dir }}"
         - "{{ default_install_dir }}/{{ protocol }}"      
 
+    - name: Copy default tmux
+      # disable this when running in distributed nodes
+      run_once: true
+      copy:
+        src: templates/tmux.conf
+        dest: "{{ default_install_dir }}/tmux.conf"
+        force: true
+
     - name: build source code for DKVF_core
       delegate_to: 127.0.0.1
       run_once: yes

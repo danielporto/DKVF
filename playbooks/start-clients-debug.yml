@@ -1,0 +1,46 @@
+---
+- hosts: clients
+  become: no
+  any_errors_fatal: true
+  gather_facts: no
+  vars_files:
+      - vars.yml
+      - topology.yml
+
+  tasks:
+
+
+    - name: Check if sessions are already started
+      ansible.builtin.shell: |
+        {{tmux_path}}/tmux -f {{ default_install_dir }}/tmux.conf ls  | grep "client{{ topology['clients'][inventory_hostname].id }}" | cut -d ":" -f 1
+      args:
+        executable: /bin/bash
+      register: start_processes
+
+    - name: IDs of processes to skip starting
+      debug:
+        msg:  "{{ start_processes.stdout }}"
+
+    - name: Start client tmux sessions
+      ansible.builtin.shell: |
+        {{tmux_path}}/tmux -f {{ default_install_dir }}/tmux.conf new-session -s "client{{ topology['clients'][inventory_hostname].id }}" -d
+      when: start_processes.stdout | length == 0
+
+    - name: Check if processes are already started
+      ansible.builtin.shell: |
+        ps -ax | grep -E '{{protocol}}_client' | grep "client{{ topology['clients'][inventory_hostname].id }}.conf" | grep -v grep | awk '{print $1}' | tr '\n' ' '
+      args:
+        executable: /bin/bash
+      register: start_processes
+
+    - name: IDs of processes to skip starting
+      debug:
+        msg:  "{{ start_processes.stdout }}"
+
+    - name: Start datastore clients
+      ansible.builtin.shell: |
+        {{tmux_path}}/tmux -f {{ default_install_dir }}/tmux.conf send-keys -t client{{ topology['clients'][inventory_hostname].id }} "cd {{ default_install_dir }}/{{ protocol }}/{{inventory_hostname}}" ENTER;
+        {{tmux_path}}/tmux -f {{ default_install_dir }}/tmux.conf send-keys -t client{{ topology['clients'][inventory_hostname].id }} "{{ default_install_dir }}/{{ protocol }}/{{inventory_hostname}}/runClient{{ topology['clients'][inventory_hostname].id }}.sh" ENTER
+      args:
+        executable: /bin/bash
+      when: start_processes.stdout | length == 0

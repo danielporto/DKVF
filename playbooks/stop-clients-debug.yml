@@ -1,0 +1,27 @@
+---
+- hosts: clients
+  become: no
+  any_errors_fatal: true
+  gather_facts: no
+  vars_files:
+      - vars.yml
+      - topology.yml
+
+  tasks:
+
+
+    - name: Check if sessions are already started
+      ansible.builtin.shell: |
+        {{tmux_path}}/tmux -f {{ default_install_dir }}/tmux.conf ls  | grep "client{{ topology['clients'][inventory_hostname].id }}" | cut -d ":" -f 1
+      args:
+        executable: /bin/bash
+      register: start_processes
+
+    - name: IDs of processes to skip starting
+      debug:
+        msg:  "{{ start_processes.stdout }}"
+
+    - name: Start client tmux sessions
+      ansible.builtin.shell: |
+        {{tmux_path}}/tmux -f {{ default_install_dir }}/tmux.conf kill-session -t "client{{ topology['clients'][inventory_hostname].id }}"
+      when: start_processes.stdout | length != 0
