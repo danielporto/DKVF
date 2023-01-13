@@ -51,12 +51,15 @@ dependencies {
     implementation files('libs/core-0.14.0-SNAPSHOT.jar')
     implementation files('libs/protobuf-java-3.21.9.jar')
     implementation files('libs/jackson-core-asl-1.9.4.jar')
-    implementation files('libs/jsch-0.2.4.jar') // use alternative implemetation from https://github.com/mwiede/jsch which supports new openssh keys
+    implementation files('libs/jsch-0.2.4.jar') // use alternative implementation from https://github.com/mwiede/jsch which supports new openssh keys
     implementation files('libs/jgoodies-forms-1.8.0.jar')
     implementation files('libs/jackson-mapper-asl-1.9.13.jar')
     implementation files('libs/miglayout-swing-5.3.jar')
     implementation files('libs/commons-cli-1.5.0.jar')
-    implementation project(':Eventual_client')
+    implementation project(':DKVF_core')
+
+    implementation 'org.apache.logging.log4j:log4j-api:2.19.0'
+    implementation 'org.apache.logging.log4j:log4j-core:2.19.0'
 }
 
 // Build clusterManager Tool

@@ -1,8 +1,8 @@
 syntax = "proto3";
 
-package Metadata; 
+package Metadata;
 
-option java_package = "edu.msu.cse.dkvf.metadata";
+option java_package = "edu.msu.cse.dkvf.cops.metadata";
 option java_outer_classname = "Metadata";
 
 
@@ -12,12 +12,12 @@ message Dependency {
 }
 
 message Record {
-	bytes value = 1; 
+	bytes value = 1;
 	int64 version = 2;
 }
 
-
-//---------------Client messages---------------
+//-----------------------------------------------
+//---------------Client messages-----------------
 message GetMessage {
 	 string key =1;
 }
@@ -36,7 +36,6 @@ message ClientMessage {
 	}
  }
 //-----------------------------------------------
-
 //-----------------Client Reply------------------
 message GetReply{
 	Record record = 1;
@@ -71,8 +70,7 @@ message ServerMessage {
 	oneof message_type{
 		ReplicateMessage replicate_message = 1;
 		DependencyCheckMessage dep_check_message = 2;
-		DependencyResponseMessage dep_response_message = 3; 
+		DependencyResponseMessage dep_response_message = 3;
 	}
 }
 //-----------------------------------------------
-

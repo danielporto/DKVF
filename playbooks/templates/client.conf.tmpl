@@ -2,7 +2,7 @@
 <config>
     <id>{{ topology['clients'][inventory_hostname].id }}</id>
     <connect_to>{% for server in topology['clients'][inventory_hostname].client_to_server_conections %} 
-        <server id="{{ topology['servers'][server].id }}" ip="{{ hostvars[server].ansible_host }}" port="{{ topology['servers'][server].client_port }}"/>{% endfor %} 
+        <server id="{{ topology['servers'][server].id }}_{{ topology['servers'][server].protocol_settings['p_id'] }}" ip="{{ hostvars[server].ansible_host }}" port="{{ topology['servers'][server].client_port }}"/>{% endfor %} 
     </connect_to>
     <protocol_properties>{% for property in topology['clients'][inventory_hostname].protocol_settings %} 
         <property key="{{ property }}" value="{{ topology['clients'][inventory_hostname].protocol_settings[property] }}"/>{% endfor %} 

@@ -1,25 +1,21 @@
 package edu.msu.cse.dkvf;
 
 
+import com.google.protobuf.GeneratedMessageV3;
+import edu.msu.cse.dkvf.ServerConnector.NetworkStatus;
+import edu.msu.cse.dkvf.config.ConfigReader;
 
 import java.text.MessageFormat;
-
-import edu.msu.cse.dkvf.ServerConnector.NetworkStatus;
-import edu.msu.cse.dkvf.Storage.StorageStatus;
-import edu.msu.cse.dkvf.config.ConfigReader;
-import edu.msu.cse.dkvf.metadata.Metadata.ClientMessage;
-import edu.msu.cse.dkvf.metadata.Metadata.ClientReply;
 
 /**
  * The base class for the client side of the protocol. Any protocol needs to
  * extends this class for the client side.
  *
  */
-public abstract class DKVFClient extends DKVFBase {
-
+public abstract class DKVFClient<Record extends GeneratedMessageV3, ServerMessage extends GeneratedMessageV3, ClientMessage extends GeneratedMessageV3, ClientReply extends GeneratedMessageV3> extends DKVFBase<Record, ServerMessage, ClientMessage, ClientReply> {
 	/**
 	 * The abstract method for putting a value with the given key.
-	 * 
+	 *
 	 * @param key
 	 *            The key of data to put
 	 * @param value
@@ -32,7 +28,7 @@ public abstract class DKVFClient extends DKVFBase {
 
 	/**
 	 * The abstract method for getting a value with the given key.
-	 * 
+	 *
 	 * @param key
 	 *            The key of data to put
 	 * @return The value resulted for the give key. <br/>
@@ -40,51 +36,50 @@ public abstract class DKVFClient extends DKVFBase {
 	 */
 	public abstract byte[] get(String key);
 
-	public DKVFClient(ConfigReader cnfReader) {
-		super(cnfReader);
+	public DKVFClient(ConfigReader cnfReader, Class<Record> r, Class<ServerMessage> sm, Class<ClientMessage> cm, Class<ClientReply> cr) throws IllegalAccessException {
+		super(cnfReader, r, sm, cm, cr);
 	}
 
 	/**
 	 * Runs server connector and storage.
-	 * 
+	 *
 	 * @return <b>true</b> if successful <br/>
 	 *         <b>false</b> if unsuccessful
 	 */
 	public boolean runAll() {
 		if (connectToServers() == NetworkStatus.SUCCESS){
-			frameworkLOGGER.info("Sucessfully ran the server connector");
-			
+			LOGGER.info("Sucessfully ran the server connector");
+
 		}
 		else
 			return false;
 		/* I comment here, for now. Later we need to add storage enable/disable in the XMLs
-		 * and disable it for YCSB experiments, because client threads share same folder that 
-		 * creates problems for lock. 
-		
-		
+		 * and disable it for YCSB experiments, because client threads share same folder that
+		 * creates problems for lock.
+
+
 		if (runDb() == StorageStatus.SUCCESS)
-			frameworkLOGGER.info("Sucessfully ran the stable storage");
+			LOGGER.info("Sucessfully ran the stable storage");
 		else
 			return false;
 			*/
-		
+
 		/*
 		//debug
 		try {
-			
+
 			Thread.sleep(15000);
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}*/
-		
+
 		return true;
-		
 	}
 
 	/**
 	 * Sends a client message to the server with the given ID.
-	 * 
+	 *
 	 * @param serverId
 	 *            The ID of the destination server.
 	 * @param cm
@@ -93,34 +88,31 @@ public abstract class DKVFClient extends DKVFBase {
 	 */
 	public NetworkStatus sendToServer(String serverId, ClientMessage cm) {
 		try {
-			serversOut.get(serverId).writeInt32NoTag(cm.getSerializedSize());
-			cm.writeTo(serversOut.get(serverId));
-			serversOut.get(serverId).flush();
-			//cm.writeDelimitedTo(serversOut.get(serverId));
-			frameworkLOGGER.finer(MessageFormat.format("Sent to server with id= {0} \n{1}", serverId, cm.toString()));
+			cm.writeDelimitedTo(serversOut.get(serverId));
+			LOGGER.debug(MessageFormat.format("Sent to server with id= {0} \n{1}", serverId, cm.toString()));
 			return NetworkStatus.SUCCESS;
 		} catch (Exception e) {
-			frameworkLOGGER.warning(Utils.exceptionLogMessge(MessageFormat.format("Problem in sending to server with Id= {0}" , serverId), e));
+			LOGGER.warn(Utils.exceptionLogMessge(MessageFormat.format("Problem in sending to server with Id= {0}" , serverId), e));
 			return NetworkStatus.FAILURE;
 		}
 	}
 
 	/**
 	 * Reads from input stream of the server with the given ID.
-	 * 
+	 *
 	 * @param serverId
 	 *            The ID of the server to read from its input stream.
 	 * @return The received ClientReply message.
 	 */
 	public ClientReply readFromServer(String serverId) {
 		try {
-			int size = serversIn.get(serverId).readInt32();
-			byte[] result = serversIn.get(serverId).readRawBytes(size);
-			return ClientReply.parseFrom(result);
+			ClientReply cr = (ClientReply) this.clientReplyParser.parseDelimitedFrom(serversIn.get(serverId));
+			LOGGER.debug(MessageFormat.format("READ from server with id= {0} \n{1}", serverId, cr.toString()));
+			return cr;
 		} catch (Exception e) {
 			//debug
-			frameworkLOGGER.warning("serversIn= " + serverId + " serversIn.get(serverId) = " + serversIn.get(serverId) + " serversOut.get(serverId)= " + serversOut.get(serverId));
-			frameworkLOGGER.warning(Utils.exceptionLogMessge(MessageFormat.format("Problem in reading response from server with Id= {0}" , serverId), e));
+			LOGGER.warn("serversIn= " + serverId + " serversIn.get(serverId) = " + serversIn.get(serverId) + " serversOut.get(serverId)= " + serversOut.get(serverId));
+			LOGGER.warn(Utils.exceptionLogMessge(MessageFormat.format("Problem in reading response from server with Id= {0}" , serverId), e));
 			return null;
 		}
 	}

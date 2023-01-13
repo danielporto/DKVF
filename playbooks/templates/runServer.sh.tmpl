@@ -1,6 +1,5 @@
 #!/bin/sh
+
 {{ java_path }}/java -jar \
     {{ protocol }}_server-all-0.0.1-SNAPSHOT.jar \
-    server{{topology['servers'][inventory_hostname].id}}.conf \
-        > server{{topology['servers'][inventory_hostname].id}}.result \
-        2> server{{topology['servers'][inventory_hostname].id}}.error
+    server{{topology['servers'][inventory_hostname].id}}.conf 2>&1 | tee -a server{{topology['servers'][inventory_hostname].id}}.log

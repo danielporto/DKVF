@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package Metadata; 
 
-option java_package = "edu.msu.cse.dkvf.metadata";
+option java_package = "edu.msu.cse.dkvf.eventual.metadata";
 option java_outer_classname = "Metadata";
 
 

@@ -1,15 +1,15 @@
 package edu.msu.cse.dkvf;
 
+import edu.msu.cse.dkvf.config.ConfigReader.ServerInfo;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.Socket;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Map;
-import java.util.logging.Logger;
-
-import com.google.protobuf.CodedInputStream;
-import com.google.protobuf.CodedOutputStream;
-
-import edu.msu.cse.dkvf.config.ConfigReader.ServerInfo;
 
 /**
  * Class to connect to specified servers
@@ -17,11 +17,11 @@ import edu.msu.cse.dkvf.config.ConfigReader.ServerInfo;
  */
 public class ServerConnector implements Runnable {
 	ArrayList<ServerInfo> pendingServers;
-	Map<String, CodedOutputStream> serversOut;
-	Map<String, CodedInputStream> serversIn;
+	Map<String, OutputStream> serversOut;
+	Map<String, InputStream> serversIn;
 	Map<String, Socket> sockets;
 	int sleepTime;
-	Logger LOGGER;
+	protected static final Logger LOGGER = LogManager.getLogger(ServerConnector.class);
 
 	/**
 	 * Network operation status
@@ -42,16 +42,13 @@ public class ServerConnector implements Runnable {
 	 * 			The map of IDs to servers to their sockets
 	 * @param sleepTime
 	 * 			The sleep time before trying connection again
-	 * @param logger
-	 * 			The logger
 	 */
-	public ServerConnector(ArrayList<ServerInfo> serversInfoToConnect, Map<String, CodedOutputStream> serversOut,
-			Map<String, CodedInputStream> serversIn, Map<String, Socket> sockets, int sleepTime, Logger logger) {
-		this.LOGGER = logger;
+	public ServerConnector(ArrayList<ServerInfo> serversInfoToConnect, Map<String, OutputStream> serversOut,
+						   Map<String, InputStream> serversIn, Map<String, Socket> sockets, int sleepTime) {
 		this.serversOut = serversOut;
 		this.serversIn = serversIn;
 		this.sockets = sockets;
-		
+
 		this.pendingServers = new ArrayList<>();
 		for (ServerInfo si : serversInfoToConnect){
 			if (!serversIn.containsKey(si.id))
@@ -66,31 +63,28 @@ public class ServerConnector implements Runnable {
 	public void run() {
 		LOGGER.info("Server connector started.");
 		// Periodically tries to connect to pending servers. Once successfully
-		// connected,
-		// add them to servers and remove them from pending servers.
+		// connected, add them to servers and remove them from pending servers.
 		int i = 0;
 		Socket newSocket = null;
 		while (pendingServers.size() > 0) {
 			try {
 				newSocket = new Socket(pendingServers.get(i).ip, pendingServers.get(i).port);
-				CodedOutputStream out = CodedOutputStream.newInstance(newSocket.getOutputStream());
-				serversOut.put(pendingServers.get(i).id, out);
-				CodedInputStream in = CodedInputStream.newInstance(newSocket.getInputStream());
-				serversIn.put(pendingServers.get(i).id, in);
-				LOGGER.fine(MessageFormat.format("Connected to server with\n\tid= {0} \n\tip= {1} \n\tport= {2}",
+				serversOut.put(pendingServers.get(i).id, newSocket.getOutputStream());
+				serversIn.put(pendingServers.get(i).id, newSocket.getInputStream());
+				LOGGER.debug(MessageFormat.format("Connected to server with\n\tid= {0} \n\tip= {1} \n\tport= {2}",
 						pendingServers.get(i).id,
 						pendingServers.get(i).ip,
 						String.valueOf(pendingServers.get(i).port)
 						));
 				sockets.put(pendingServers.get(i).id, newSocket);
 				pendingServers.remove(i);
-				
+
 			} catch (Exception e) {
 				try {
 					if (newSocket != null)
 						newSocket.close();
 				}catch (Exception e1){
-					
+
 				}
 			} finally {
 				if (pendingServers.size() > 0) {
@@ -108,11 +102,11 @@ public class ServerConnector implements Runnable {
 		LOGGER.info("Sucessfully connected to all servers.");
 	}
 
-	/** 
-	 * Is the connection to all expected servers are done. 
+	/**
+	 * Is the connection to all expected servers are done.
 	 * @return
 	 * 			<b>true</b> The connection is done. <br/>
-	 * 			<b>false</b> The connection is not done yet. 
+	 * 			<b>false</b> The connection is not done yet.
 	 */
 	public boolean isDone() {
 		return pendingServers.size() == 0;

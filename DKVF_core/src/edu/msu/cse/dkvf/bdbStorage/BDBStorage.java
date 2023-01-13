@@ -1,36 +1,22 @@
 package edu.msu.cse.dkvf.bdbStorage;
 
-import java.io.File;
+import com.google.protobuf.GeneratedMessageV3;
+import com.sleepycat.je.*;
+import edu.msu.cse.dkvf.Storage;
+import edu.msu.cse.dkvf.Utils;
 
-import java.util.ArrayList;
+import java.io.File;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
-
 import java.util.function.Predicate;
-import java.util.logging.Logger;
-
-import com.sleepycat.je.Cursor;
-import com.sleepycat.je.Database;
-import com.sleepycat.je.DatabaseConfig;
-import com.sleepycat.je.DatabaseEntry;
-
-import com.sleepycat.je.Environment;
-import com.sleepycat.je.EnvironmentConfig;
-import com.sleepycat.je.LockMode;
-import com.sleepycat.je.OperationStatus;
-
-import edu.msu.cse.dkvf.Storage;
-import edu.msu.cse.dkvf.Utils;
-import edu.msu.cse.dkvf.metadata.Metadata.*;
 
 /**
  * Driver for Berkeley-DB.
  *
  */
-public class BDBStorage extends Storage {
+public class BDBStorage<Record extends GeneratedMessageV3> extends Storage<Record> {
 
-	Logger logger;
 	String directory;
 	String name;
 	boolean instantStable;
@@ -45,16 +31,18 @@ public class BDBStorage extends Storage {
 	final static String DB_DIRECTORY_DEFAULT = "DB";
 	final static String INSTANT_STABLE_DEFAULT = "false";
 	final static String MULTI_VERSION = "true";
-	final static String COMPARATOR_CLASS_NAME_DEFAULT = "edu.msu.cse.dkvf.comparator.RecordCompartor";
+	final static String COMPARATOR_CLASS_NAME_DEFAULT = "edu.msu.cse.dkvf.comparator.RecordComparator";
+
+	public BDBStorage(Class<Record> c) throws IllegalAccessException {
+		super(c);
+	}
 
 	/**
-	 * Initializes the storage engine. 
+	 * Initializes the storage engine.
 	 * @param storageConfig The configuration for the storage engine
-	 * @param logger The logger
 	 * @return The result of the operation
 	 */
-	public StorageStatus init(HashMap<String, String> storageConfig, Logger logger) {
-		this.logger = logger;
+	public StorageStatus init(HashMap<String, String> storageConfig) {
 		this.directory = setProperty(DB_DIRECTORY_DEFAULT, storageConfig.get("db_directory"));
 		this.name = setProperty(DB_NAME_DEFAULT, storageConfig.get("db_name"));
 		this.instantStable = Boolean.parseBoolean(setProperty(INSTANT_STABLE_DEFAULT, storageConfig.get("instant_stable")));
@@ -77,20 +65,20 @@ public class BDBStorage extends Storage {
 			if (db != null)
 				db.put(null, myKey, myData);
 			else {
-				logger.severe("Problem in puting key= " + key + ". DB is not running properly.");
+				LOGGER.fatal("Problem in puting key={} DB is not running properly.", key);
 				return StorageStatus.FAILURE;
 			}
 			if (instantStable)
 				db.sync();
 			return StorageStatus.SUCCESS;
 		} catch (Exception e) {
-			logger.severe("Problem in puting key= " + key + " " + e.toString() + " Message: " + e.getMessage());
+			LOGGER.fatal("Problem in puting key= " + key + " " + e.toString() + " Message: " + e.getMessage());
 			return StorageStatus.FAILURE;
 		}
 	}
 
 	/**
-	 * Makes the data base information stable by writing them to the disk. 
+	 * Makes the data base information stable by writing them to the disk.
 	 * @return The result of the operation
 	 */
 	public StorageStatus makeStable() {
@@ -99,11 +87,11 @@ public class BDBStorage extends Storage {
 				db.sync();
 				return StorageStatus.SUCCESS;
 			} else {
-				logger.severe("Problem in making db stable: DB is not running properly.");
+				LOGGER.fatal("Problem in making db stable: DB is not running properly.");
 				return StorageStatus.FAILURE;
 			}
 		} catch (Exception e) {
-			logger.severe("Problem in making db stable: " + e.toString());
+			LOGGER.fatal("Problem in making db stable: " + e.toString());
 			return StorageStatus.FAILURE;
 		}
 	}
@@ -124,13 +112,13 @@ public class BDBStorage extends Storage {
 				return StorageStatus.FAILURE;
 			return StorageStatus.SUCCESS;
 		} catch (Exception e) {
-			logger.severe("Problem in cleaning db: " + e.toString() + "\n\tDirectory= " + directory);
+			LOGGER.fatal("Problem in cleaning db: {} \n\tDirectory= {}", e.toString(), directory);
 			return StorageStatus.FAILURE;
 		}
 	}
 
 	/**
-	 * Closes the database. 
+	 * Closes the database.
 	 * @return The result of the operation
 	 */
 	public StorageStatus close() {
@@ -144,16 +132,16 @@ public class BDBStorage extends Storage {
 			}
 			return StorageStatus.SUCCESS;
 		} catch (Exception e) {
-			logger.severe("Problem in closing db: " + e.toString());
+			LOGGER.fatal("Problem in closing db: " + e.toString());
 			return StorageStatus.FAILURE;
 		}
 	}
-	
+
 	/**
 	 * Reads the first version of the data item with the given key that satisfies the given predicate.
-	 * @param key The key of the data item to read. 
-	 * @param p The predicate that need to be satisfied by the version. 
-	 * @param result The list of containing the version that satisfies the given predicate. Note that although it is a list, only the first element should be used. 
+	 * @param key The key of the data item to read.
+	 * @param p The predicate that need to be satisfied by the version.
+	 * @param result The list of containing the version that satisfies the given predicate. Note that although it is a list, only the first element should be used.
 	 * @return The result of the operation
 	 */
 	public StorageStatus read(String key, Predicate<Record> p, List<Record> result) {
@@ -165,14 +153,14 @@ public class BDBStorage extends Storage {
 			if (db != null)
 				cursor = db.openCursor(null, null);
 			else {
-				logger.severe("Problem in getFirst. DB is not running properly.");
+				LOGGER.fatal("Problem in getFirst. DB is not running properly.");
 				return StorageStatus.FAILURE;
 			}
 			// Position the cursor
 			OperationStatus retVal = cursor.getSearchKey(myKey, myData, LockMode.DEFAULT);
 
 			while (retVal == OperationStatus.SUCCESS) {
-				Record rec = Record.parseFrom(myData.getData());
+				Record rec = this.recordParser.parseFrom(myData.getData());
 				if (p.test(rec)) {
 					result.add(rec);
 					return StorageStatus.SUCCESS;
@@ -183,7 +171,7 @@ public class BDBStorage extends Storage {
 			cursor.close();
 			return StorageStatus.FAILURE;
 		} catch (Exception e) {
-			logger.severe("Problem in reading key= " + key + " : " + e.toString());
+			LOGGER.fatal("Problem in reading key= " + key + " : " + e.toString());
 			return StorageStatus.FAILURE;
 		} finally {
 			if (cursor != null)
@@ -191,12 +179,12 @@ public class BDBStorage extends Storage {
 		}
 
 	}
-	
+
 	/**
 	 * Reads the all versions of the data item with the given key that satisfy the given predicate.
-	 * @param key The key of the data item to read. 
-	 * @param p The predicate that need to be satisfied by the versions. 
-	 * @param result The list of all versions that satisfy the given predicate. 
+	 * @param key The key of the data item to read.
+	 * @param p The predicate that need to be satisfied by the versions.
+	 * @param result The list of all versions that satisfy the given predicate.
 	 * @return The result of the operation
 	 */
 	public StorageStatus readAll(String key, Predicate<Record> p, List<Record> result) {
@@ -208,14 +196,14 @@ public class BDBStorage extends Storage {
 			if (db != null)
 				cursor = db.openCursor(null, null);
 			else {
-				logger.severe("Problem in getAll. DB is not running properly.");
+				LOGGER.fatal("Problem in getAll. DB is not running properly.");
 				return StorageStatus.FAILURE;
 			}
 			// Position the cursor
 			OperationStatus retVal = cursor.getSearchKey(myKey, myData, LockMode.DEFAULT);
 
 			while (retVal == OperationStatus.SUCCESS) {
-				Record record = Record.parseFrom(myData.getData());
+				Record record = this.recordParser.parseFrom(myData.getData());
 				if (p.test(record))
 					result.add(record);
 				else {
@@ -228,7 +216,7 @@ public class BDBStorage extends Storage {
 			else
 				return StorageStatus.FAILURE;
 		} catch (Exception e) {
-			logger.severe("Problem in reading key= " + key + " : " + e.toString());
+			LOGGER.fatal("Problem in reading key= " + key + " : " + e.toString());
 			return StorageStatus.FAILURE;
 		} finally {
 			if (cursor != null)
@@ -237,7 +225,7 @@ public class BDBStorage extends Storage {
 	}
 
 	/**
-	 * Runs the storage engine. 
+	 * Runs the storage engine.
 	 * @return The result of the operation
 	 */
 	public StorageStatus run() {
@@ -263,7 +251,7 @@ public class BDBStorage extends Storage {
 			db = env.openDatabase(null, name, dbConfig);
 			return StorageStatus.SUCCESS;
 		} catch (Exception e) {
-			logger.severe(Utils.exceptionLogMessge("Problem in running db", e));
+			LOGGER.fatal(Utils.exceptionLogMessge("Problem in running db", e));
 			return StorageStatus.FAILURE;
 		}
 	}

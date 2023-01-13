@@ -1,8 +1,8 @@
 package edu.msu.cse.dkvf.clusterManager;
 
-/* 
+/*
 * SSHManager
-* 
+*
 * @author cabbott
 * @version 1.0
 */
@@ -18,11 +18,13 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.Vector;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class SSHManager {
-	private static final Logger LOGGER = Logger.getLogger(SSHManager.class.getName());
+	private static final Logger LOGGER = LogManager.getLogger(SSHManager.class);
+
 	private JSch jschSSHChannel;
 	private String strUserName;
 	private String strConnectionIP;
@@ -83,22 +85,6 @@ public class SSHManager {
 		Channel channel = sesConnection.openChannel("sftp");
 		channel.connect();
 		channelSftp = (ChannelSftp) channel;
-	}
-
-	private String logError(String errorMessage) {
-		if (errorMessage != null) {
-			LOGGER.log(Level.SEVERE, "{0}:{1} - {2}", new Object[] { strConnectionIP, intConnectionPort, errorMessage });
-		}
-
-		return errorMessage;
-	}
-
-	private String logWarning(String warnMessage) {
-		if (warnMessage != null) {
-			LOGGER.log(Level.WARNING, "{0}:{1} - {2}", new Object[] { strConnectionIP, intConnectionPort, warnMessage });
-		}
-
-		return warnMessage;
 	}
 
 	public String sendCommandGetResponse(String command) throws JSchException, IOException {

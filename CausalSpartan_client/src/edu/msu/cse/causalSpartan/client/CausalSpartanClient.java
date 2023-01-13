@@ -55,11 +55,11 @@ public class CausalSpartanClient extends DKVFClient {
 				updateDS(dcId, cr.getPutReply().getUt());
 				return true;
 			} else {
-				protocolLOGGER.severe("Server could not put the key= " + key);
+				LOGGER.fatal("Server could not put the key= " + key);
 				return false;
 			}
 		} catch (Exception e) {
-			protocolLOGGER.severe(Utils.exceptionLogMessge("Failed to put due to exception", e));
+			LOGGER.fatal(Utils.exceptionLogMessge("Failed to put due to exception", e));
 			return false;
 		}
 	}
@@ -80,11 +80,11 @@ public class CausalSpartanClient extends DKVFClient {
 				}
 				return cr.getGetReply().getValue().toByteArray();
 			} else {
-				protocolLOGGER.severe("Server could not get the key= " + key);
+				LOGGER.fatal("Server could not get the key= " + key);
 				return null;
 			}
 		} catch (Exception e) {
-			protocolLOGGER.severe(Utils.exceptionLogMessge("Failed to get due to exception", e));
+			LOGGER.fatal(Utils.exceptionLogMessge("Failed to get due to exception", e));
 			return null;
 		}
 	}

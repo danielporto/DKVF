@@ -1,5 +1,5 @@
 ---
-- hosts: servers
+- hosts: clients
   become: no
   any_errors_fatal: true
   gather_facts: no
@@ -10,7 +10,7 @@
   tasks:
   - name: Processes to stop
     ansible.builtin.shell: |
-      ps -ax | grep -E '{{protocol}}_server' | grep -v grep | awk '{print $1}' | tr '\n' ' '
+      ps -ax | grep -E '{{protocol}}_client' | grep -v grep | awk '{print $1}' | tr '\n' ' '
     args:
       executable: /bin/bash
     register: stop_processes 
@@ -19,7 +19,7 @@
     debug: 
       msg:  "{{ stop_processes.stdout }}"
 
-  - name: Stop datastore servers
+  - name: Stop clients
     ansible.builtin.shell: |
       kill -9 {{stop_processes.stdout}}
     args:

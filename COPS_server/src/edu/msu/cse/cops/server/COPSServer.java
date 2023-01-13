@@ -6,22 +6,15 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import com.google.protobuf.GeneratedMessageV3;
 import edu.msu.cse.dkvf.ClientMessageAgent;
 import edu.msu.cse.dkvf.DKVFServer;
 import edu.msu.cse.cops.server.Utils;
 import edu.msu.cse.dkvf.Storage.StorageStatus;
 import edu.msu.cse.dkvf.config.ConfigReader;
-import edu.msu.cse.dkvf.metadata.Metadata.ClientReply;
-import edu.msu.cse.dkvf.metadata.Metadata.Dependency;
-import edu.msu.cse.dkvf.metadata.Metadata.DependencyCheckMessage;
-import edu.msu.cse.dkvf.metadata.Metadata.DependencyResponseMessage;
-import edu.msu.cse.dkvf.metadata.Metadata.GetMessage;
-import edu.msu.cse.dkvf.metadata.Metadata.GetReply;
-import edu.msu.cse.dkvf.metadata.Metadata.PutMessage;
-import edu.msu.cse.dkvf.metadata.Metadata.PutReply;
-import edu.msu.cse.dkvf.metadata.Metadata.Record;
-import edu.msu.cse.dkvf.metadata.Metadata.ReplicateMessage;
-import edu.msu.cse.dkvf.metadata.Metadata.ServerMessage;
+import edu.msu.cse.dkvf.cops.metadata.Metadata;
+import edu.msu.cse.dkvf.cops.metadata.Metadata.Record;
+import edu.msu.cse.dkvf.cops.metadata.Metadata.*;
 
 public class COPSServer extends DKVFServer {
 
@@ -44,11 +37,11 @@ public class COPSServer extends DKVFServer {
 
 	// dependency check mechanism
 	HashMap<String, List<DependencyCheckMessage>> waitingDepChecks; //the key is the key that we want as dependency, and value is the dependency that is waiting for this key.
-	HashMap<String, List<String>> waitingLocalDeps; //the key is the key that we want as dependency, the value is the list of pending keys that are waiting. Both dependency key and pending key are hosted on this partition, that why it is called local dep check. 
-	HashMap<String, RecordDependecies> pendingKeys; //the key is the key that is pending, and the value is the record to write + its dependencies. 
+	HashMap<String, List<String>> waitingLocalDeps; //the key is the key that we want as dependency, the value is the list of pending keys that are waiting. Both dependency key and pending key are hosted on this partition, that why it is called local dep check.
+	HashMap<String, RecordDependecies> pendingKeys; //the key is the key that is pending, and the value is the record to write + its dependencies.
 
-	public COPSServer(ConfigReader cnfReader) {
-		super(cnfReader);
+	public COPSServer(ConfigReader cnfReader) throws IllegalAccessException {
+		super(cnfReader, Metadata.Record.class, Metadata.ServerMessage.class, Metadata.ClientMessage.class, Metadata.ClientReply.class);
 
 		HashMap<String, List<String>> protocolProperties = cnfReader.getProtocolProperties();
 
@@ -65,17 +58,19 @@ public class COPSServer extends DKVFServer {
 	}
 
 	public void handleClientMessage(ClientMessageAgent cma) {
-		if (cma.getClientMessage().hasGetMessage()) {
+		Metadata.ClientMessage cmsg = (Metadata.ClientMessage) cma.getClientMessage();
+		if (cmsg.hasGetMessage()) {
 			handleGetMessage(cma);
-		} else if (cma.getClientMessage().hasPutMessage()) {
+		} else if (cmsg.hasPutMessage()) {
 			handlePutMessage(cma);
 		}
 	}
 
 	private void handleGetMessage(ClientMessageAgent cma) {
-		GetMessage gm = cma.getClientMessage().getGetMessage();
+		Metadata.ClientMessage cmsg = (Metadata.ClientMessage) cma.getClientMessage();
+		GetMessage gm = cmsg.getGetMessage();
 		List<Record> result = new ArrayList<>();
-		StorageStatus ss = read(gm.getKey(), (Record rec) -> {
+		StorageStatus ss = read(gm.getKey(), rec -> {
 			return true;
 		}, result);
 		ClientReply cr = null;
@@ -89,7 +84,8 @@ public class COPSServer extends DKVFServer {
 	}
 
 	private void handlePutMessage(ClientMessageAgent cma) {
-		PutMessage pm = cma.getClientMessage().getPutMessage();
+		Metadata.ClientMessage cmsg = (Metadata.ClientMessage) cma.getClientMessage();
+		PutMessage pm = cmsg.getPutMessage();
 		long veriosn = getNextVersion();
 		Record rec = Record.newBuilder().setValue(pm.getValue()).setVersion(veriosn).build();
 		boolean result = makeVisible(pm.getKey(), rec);
@@ -111,12 +107,13 @@ public class COPSServer extends DKVFServer {
 				continue;
 			String id = i + "_" + pId;
 
-			protocolLOGGER.finer(MessageFormat.format("Sendng replicate message to {0}: {1}", id, sm.toString()));
+			LOGGER.debug(MessageFormat.format("Sendng replicate message to {0}: {1}", id, sm.toString()));
 			sendToServerViaChannel(id, sm);
 		}
 	}
 
-	public void handleServerMessage(ServerMessage sm) {
+	public void handleServerMessage(GeneratedMessageV3 smg) {
+		ServerMessage sm = (ServerMessage) smg;
 		if (sm.hasReplicateMessage()) {
 			handleReplicateMessage(sm);
 		} else if (sm.hasDepCheckMessage()) {
@@ -154,7 +151,7 @@ public class COPSServer extends DKVFServer {
 		// first we check the current verison, maybe it is higher than the
 		// version that we want to write. In that case we don't write it.
 		List<Record> result = new ArrayList<>();
-		StorageStatus ss = read(key, (Record rec2) -> {
+		StorageStatus ss = read(key, rec2 -> {
 			return true;
 		}, result);
 		if (ss == StorageStatus.SUCCESS) {
@@ -176,7 +173,7 @@ public class COPSServer extends DKVFServer {
 		DependencyCheckMessage cdm = sm.getDepCheckMessage();
 
 		List<Record> result = new ArrayList<>();
-		StorageStatus ss = read(cdm.getDep().getKey(), (Record rec) -> {
+		StorageStatus ss = read(cdm.getDep().getKey(), rec -> {
 			return true;
 		}, result);
 		if (ss == StorageStatus.SUCCESS) {
@@ -200,7 +197,7 @@ public class COPSServer extends DKVFServer {
 	}
 
 	private void handleReplicateMessage(ServerMessage sm) {
-		protocolLOGGER.finer(MessageFormat.format("Received replicate message: {0}", sm.toString()));
+		LOGGER.debug(MessageFormat.format("Received replicate message: {0}", sm.toString()));
 		ReplicateMessage rm = sm.getReplicateMessage();
 		updateClock(rm.getRec().getVersion());
 
@@ -227,7 +224,7 @@ public class COPSServer extends DKVFServer {
 			try {
 				partition = findPartition(key);
 			} catch (NoSuchAlgorithmException e) {
-				protocolLOGGER.severe("Problem finding partition for key " + key);
+				LOGGER.fatal("Problem finding partition for key " + key);
 				return;
 			}
 			if (partition != pId) {
@@ -239,7 +236,7 @@ public class COPSServer extends DKVFServer {
 	}
 
 	/**
-	 * 
+	 *
 	 * @param key
 	 *            Pending key, the key for which we are doing dependency
 	 *            checking.
@@ -256,14 +253,14 @@ public class COPSServer extends DKVFServer {
 					try {
 						hostingPartition = findPartition(dep.getKey());
 					} catch (NoSuchAlgorithmException e) {
-						protocolLOGGER.severe("Problem finding hosting partition for key " + dep.getKey());
+						LOGGER.fatal("Problem finding hosting partition for key " + dep.getKey());
 						continue;
 					}
 					if (hostingPartition != pId) {
 						remaining.add(dep);
 					} else {
 						List<Record> result = new ArrayList<>();
-						StorageStatus ss = read(dep.getKey(), (Record rec) -> {
+						StorageStatus ss = read(dep.getKey(), rec -> {
 							return true;
 						}, result);
 						if (ss != StorageStatus.SUCCESS || result.get(0).getVersion() < dep.getVersion()) {
@@ -274,7 +271,7 @@ public class COPSServer extends DKVFServer {
 				}
 			}
 		} catch (Exception e) {
-			protocolLOGGER.severe(edu.msu.cse.dkvf.Utils.exceptionLogMessge("Error in local dep checking", e));
+			LOGGER.fatal(edu.msu.cse.dkvf.Utils.exceptionLogMessge("Error in local dep checking", e));
 		}
 		return remaining;
 	}
@@ -321,10 +318,10 @@ public class COPSServer extends DKVFServer {
 	}
 
 	private void postVisibility(String key, long version) {
-		//Two types of partitions may wait for visibility of version: 1) local partition, or 2) antoher parition. 
-		//We check both cases. 
+		//Two types of partitions may wait for visibility of version: 1) local partition, or 2) antoher parition.
+		//We check both cases.
 
-		//local dep check 
+		//local dep check
 		try {
 			synchronized (pendingKeys) {
 				if (waitingLocalDeps.containsKey(key)) {
@@ -347,11 +344,11 @@ public class COPSServer extends DKVFServer {
 				}
 			}
 		} catch (Exception e) {
-			protocolLOGGER.severe(edu.msu.cse.dkvf.Utils.exceptionLogMessge("Error in PostVisibility: ", e));
+			LOGGER.fatal(edu.msu.cse.dkvf.Utils.exceptionLogMessge("Error in PostVisibility: ", e));
 
 		}
 
-		//check othre requests from other partitions		
+		//check othre requests from other partitions
 		if (waitingDepChecks.containsKey(key)) {
 			for (DependencyCheckMessage dcm : waitingDepChecks.get(key)) {
 				if (dcm.getDep().getVersion() <= version) {

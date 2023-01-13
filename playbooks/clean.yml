@@ -1,3 +1,7 @@
+
+- import_playbook: stop-servers.yml
+- import_playbook: stop-clients.yml
+
 - hosts: all
   become: no
   any_errors_fatal: true

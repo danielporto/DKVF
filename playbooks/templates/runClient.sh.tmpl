@@ -4,7 +4,6 @@
     com.yahoo.ycsb.Client \
     -t -db edu.msu.cse.dkvf.ycsbDriver.DKVFDriver \
     -P workload.conf \
-    -p clientClassName={{ clientClassName[protocol] }} \ 
-    -p clientConfigFile=client{{ topology['clients'][inventory_hostname].id }}.conf  \
-                > client{{topology['clients'][inventory_hostname].id}}.result \
-                2> client{{topology['clients'][inventory_hostname].id}}.error
+    -p clientClassName={{ clientClassName[protocol] }} \
+    -p clientConfigFile=client{{ topology['clients'][inventory_hostname].id }}.conf \
+     2>&1 | tee -a  client{{topology['clients'][inventory_hostname].id}}.log

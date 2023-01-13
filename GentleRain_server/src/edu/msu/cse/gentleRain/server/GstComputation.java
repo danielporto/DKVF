@@ -5,9 +5,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
-import edu.msu.cse.dkvf.metadata.Metadata.GSTMessage;
-import edu.msu.cse.dkvf.metadata.Metadata.ServerMessage;
-import edu.msu.cse.dkvf.metadata.Metadata.VVMessage;
+import edu.msu.cse.dkvf.gentlerain.metadata.Metadata.GSTMessage;
+import edu.msu.cse.dkvf.gentlerain.metadata.Metadata.ServerMessage;
+import edu.msu.cse.dkvf.gentlerain.metadata.Metadata.VVMessage;
 
 public class GstComputation implements Runnable {
 

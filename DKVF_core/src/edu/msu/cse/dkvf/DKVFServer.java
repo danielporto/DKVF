@@ -1,26 +1,26 @@
 package edu.msu.cse.dkvf;
 
 
+import com.google.protobuf.GeneratedMessageV3;
+import edu.msu.cse.dkvf.ServerConnector.NetworkStatus;
+import edu.msu.cse.dkvf.Storage.StorageStatus;
+import edu.msu.cse.dkvf.config.ConfigReader;
+import edu.msu.cse.dkvf.config.ConfigReader.ServerInfo;
+import edu.msu.cse.dkvf.controlMetadata.ControlMetadata.ControlMessage;
+import edu.msu.cse.dkvf.controlMetadata.ControlMetadata.ControlReply;
+
 import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import edu.msu.cse.dkvf.ServerConnector.NetworkStatus;
-import edu.msu.cse.dkvf.Storage.StorageStatus;
-import edu.msu.cse.dkvf.config.ConfigReader;
-import edu.msu.cse.dkvf.config.ConfigReader.ServerInfo;
-import edu.msu.cse.dkvf.metadata.Metadata.*;
-import edu.msu.cse.dkvf.controlMetadata.ControlMetadata.ControlMessage;
-import edu.msu.cse.dkvf.controlMetadata.ControlMetadata.ControlReply;
-
 /**
  * The base class for the server side of the protocol. Any protocol needs to
  * extends this class for the server side.
  *
  */
-public abstract class DKVFServer extends DKVFBase {
+public abstract class DKVFServer<Record extends GeneratedMessageV3, ServerMessage extends GeneratedMessageV3, ClientMessage extends GeneratedMessageV3, ClientReply extends GeneratedMessageV3> extends DKVFBase<Record, ServerMessage, ClientMessage, ClientReply> {
 	/**
 	 * Number of clients connected to this server.
 	 */
@@ -35,18 +35,18 @@ public abstract class DKVFServer extends DKVFBase {
 	 * ID of this server.
 	 */
 	String id;
-	
-	
+
+
 	boolean synchCommunication = false;
-	
+
 	Map<String, ChannelManager> channelManagers = new HashMap<>();
 
 	/**
-	 * Constructor for DKVFServer  
+	 * Constructor for DKVFServer
 	 * @param cnfReader The configuration reader
 	 */
-	public DKVFServer(ConfigReader cnfReader) {
-		super(cnfReader);
+	public DKVFServer(ConfigReader cnfReader, Class<Record> r, Class<ServerMessage> sm, Class<ClientMessage> cm, Class<ClientReply> cr) throws IllegalAccessException {
+		super(cnfReader, r, sm, cm, cr);
 		id = cnfReader.getConfig().getId();
 		synchCommunication = cnfReader.getConfig().isSynchCommunication();
 	}
@@ -54,37 +54,37 @@ public abstract class DKVFServer extends DKVFBase {
 	/**
 	 * Runs all service including server connector, storage, server and client
 	 * listeners.
-	 * 
+	 *
 	 * @return <b>true</b> if successful <br/>
-	 * 
+	 *
 	 *         <b>false</b> if unsuccessful
 	 */
 	public boolean runAll() {
 		//setting up synchronous communication if it is requested in the config file.
 		if (synchCommunication){
 			if ( connectToServers() == NetworkStatus.SUCCESS)
-				frameworkLOGGER.info("Sucessfully ran the server connector");
+				LOGGER.info("Sucessfully ran the server connector");
 			else {
-				frameworkLOGGER.info("Failed to setup up synchronous communication.");
+				LOGGER.info("Failed to setup up synchronous communication.");
 				return false;
 			}
 		}
-		
+
 		//asynchronous channels are always enalbled.
 		if (setupChannelManagers() == NetworkStatus.SUCCESS)
-			frameworkLOGGER.info("Sucessfully ran server channel managers.");
+			LOGGER.info("Sucessfully ran server channel managers.");
 		else {
-			frameworkLOGGER.info("Failed to setup up channels for asynchronous communication.");
+			LOGGER.info("Failed to setup up channels for asynchronous communication.");
 			return false;
 		}
 		if (runDb() == StorageStatus.SUCCESS)
-			frameworkLOGGER.info("Sucessfully ran the stable storage");
+			LOGGER.info("Sucessfully ran the stable storage");
 		else {
-			frameworkLOGGER.info("Failed to setup up storage.");
+			LOGGER.info("Failed to setup up storage.");
 			return false;
 		}
 		if (runListeners() == NetworkStatus.FAILURE){
-			frameworkLOGGER.info("Failed to setup listeners.");
+			LOGGER.info("Failed to setup listeners.");
 			return false;
 		}
 
@@ -93,42 +93,42 @@ public abstract class DKVFServer extends DKVFBase {
 	}
 
 	/**
-	 * Sets up {@link ChannelManagers} for peer servers.
+	 * Sets up {@link ChannelManager} for peer servers.
 	 * @return The result of the operation
 	 */
 	private NetworkStatus setupChannelManagers() {
 		try {
 			for (ServerInfo si : cnfReader.getServerInfos()) {
 				if (!channelManagers.containsKey(si.id)) {
-					ChannelManager cm = new ChannelManager(si.ip, si.port, new Integer(cnf.getConnectorSleepTime().trim()), new Integer(cnf.getChannelCapacity().trim()),frameworkLOGGER);
+					ChannelManager cm = new ChannelManager(si.ip, si.port, new Integer(cnf.getConnectorSleepTime().trim()), new Integer(cnf.getChannelCapacity().trim()));
 					channelManagers.put(si.id, cm);
 				}
 			}
 
 			return NetworkStatus.SUCCESS;
 		} catch (Exception e) {
-			frameworkLOGGER.severe(MessageFormat.format("Problem in creating channel managers. \n {0}", e.toString()));
+			LOGGER.fatal(MessageFormat.format("Problem in creating channel managers. \n {0}", e.toString()));
 			return NetworkStatus.FAILURE;
 		}
 	}
 
 	/**
 	 * Runs listeners for servers and clients.
-	 * 
+	 *
 	 * @return The result of the operation
 	 */
 	public NetworkStatus runListeners() {
 		if (runServerListener() == NetworkStatus.SUCCESS)
-			frameworkLOGGER.info("Sucessfully run the server listener");
+			LOGGER.info("Sucessfully run the server listener");
 		else
 			return NetworkStatus.FAILURE;
-			
+
 		if (runClientListener() == NetworkStatus.SUCCESS)
-			frameworkLOGGER.info("Sucessfully run the client listener");
+			LOGGER.info("Sucessfully run the client listener");
 		else
 			return NetworkStatus.FAILURE;
 		if (runControlListener() == NetworkStatus.SUCCESS)
-			frameworkLOGGER.info("Sucessfully run the control listener");
+			LOGGER.info("Sucessfully run the control listener");
 		else
 			return NetworkStatus.FAILURE;
 
@@ -137,13 +137,13 @@ public abstract class DKVFServer extends DKVFBase {
 	}
 
 	/**
-	 * Sends a server message to the server with the given ID. 
-	 * It guarantees that all messages are delivered. 
+	 * Sends a server message to the server with the given ID.
+	 * It guarantees that all messages are delivered.
 	 * It also guarantees FIFO delivery.
-	 * It does not wait to actually send the message. Instead, it immediately returns.  
-	 * However, each channel has a capacity defined by configuration file 
-	 * that if reached, no more message can be added to the channel, and protocol designer must deal with it.  
-	 * 
+	 * It does not wait to actually send the message. Instead, it immediately returns.
+	 * However, each channel has a capacity defined by configuration file
+	 * that if reached, no more message can be added to the channel, and protocol designer must deal with it.
+	 *
 	 * @param serverId
 	 *            The ID of the destination server.
 	 * @param sm
@@ -155,23 +155,23 @@ public abstract class DKVFServer extends DKVFBase {
 			channelManagers.get(serverId).addMessage(sm);
 			return NetworkStatus.SUCCESS;
 		} else {
-			frameworkLOGGER.severe(MessageFormat.format("No server found for id= {0}", serverId));
+			LOGGER.fatal(MessageFormat.format("No server found for id= {0}", serverId));
 			try {
 				throw new Exception();
 			}catch (Exception e) {
-				frameworkLOGGER.severe(Utils.exceptionToString(e));
+				LOGGER.fatal(Utils.exceptionToString(e));
 			}
 			return NetworkStatus.FAILURE;
 		}
 	}
-	
-	
+
+
 	/**
-	 * Sends a server message to the server with the given ID. 
+	 * Sends a server message to the server with the given ID.
 	 * It does not guarantees delivery. It should be used for messages that tolerate loss.
 	 * @param serverId
-	 * 			The ID of the destination server. 
-	 * @param cm
+	 * 			The ID of the destination server.
+	 * @param sm
 	 * 			The client message to send
 	 * @return The result of the operation
 	 */
@@ -179,31 +179,28 @@ public abstract class DKVFServer extends DKVFBase {
 		if (serversOut.containsKey(serverId)) {
 			try {
 				synchronized (serversOut.get(serverId)) {
-					serversOut.get(serverId).writeInt32NoTag(sm.getSerializedSize());
-					sm.writeTo(serversOut.get(serverId));
-					serversOut.get(serverId).flush();
-					//sm.writeDelimitedTo(serversOut.get(serverId));
-					frameworkLOGGER.finest(MessageFormat.format("Sent to server with id= {0} \n{1}", serverId, sm.toString()));
+					sm.writeDelimitedTo(serversOut.get(serverId));
+					LOGGER.debug(MessageFormat.format("Sent to server with id= {0} \n{1}", serverId, sm.toString()));
 					return NetworkStatus.SUCCESS;
 				}
 			} catch (IOException e) {
 				serversIn.remove(serverId);
 				serversOut.remove(serverId);
 				connectToServers();
-				frameworkLOGGER.severe(MessageFormat.format("Problem in sending to server with id= {0}, Message:\n{1}",
+				LOGGER.fatal(MessageFormat.format("Problem in sending to server with id= {0}, Message:\n{1}",
 						serverId, e.getMessage()));
 				return NetworkStatus.FAILURE;
 			}
 		} else {
-			frameworkLOGGER.severe(
+			LOGGER.fatal(
 					MessageFormat.format("No server found for id= {0} for message: \n {1}", serverId, sm.toString()));
 			return NetworkStatus.FAILURE;
 		}
 	}
-	
+
 	/**
 	 * Reads from input stream of the server with the given ID.
-	 * 
+	 *
 	 * @param serverId
 	 *            The ID of the server to read from its input stream.
 	 * @return The received ServerMessage object.
@@ -213,69 +210,66 @@ public abstract class DKVFServer extends DKVFBase {
 			try {
 				ServerMessage sm;
 				synchronized (serversIn.get(serverId)) {
-					int size = serversIn.get(serverId).readInt32();
-					byte[] newMessageBytes = serversIn.get(serverId).readRawBytes(size);
-					sm = ServerMessage.parseFrom(newMessageBytes);
-					//sm = ServerMessage.parseDelimitedFrom(serversIn.get(serverId));
-					frameworkLOGGER.finer(MessageFormat.format("Read from server with id={0} \n{1}", serverId, sm.toString()));
+					sm = this.serverMessageParser.parseDelimitedFrom(serversIn.get(serverId));
+					LOGGER.debug(MessageFormat.format("Read from server with id={0} \n{1}", serverId, sm.toString()));
 				}
 				return sm;
 
 			} catch (Exception e) {
-				frameworkLOGGER.severe(MessageFormat.format("Problem in reading from server with id= {0}, toString= {1}, Message= {2}", serverId, e.toString(), e.getMessage()));
+				LOGGER.fatal(MessageFormat.format("Problem in reading from server with id= {0}, toString= {1}, Message= {2}", serverId, e.toString(), e.getMessage()));
 				return null;
 			}
 		} else {
-			frameworkLOGGER.severe(MessageFormat.format("No server found for id= {0}", serverId));
+			LOGGER.fatal(MessageFormat.format("No server found for id= {0}", serverId));
 			return null;
 		}
 	}
 	/**
 	 * Runs the control listener thread.
-	 * 
+	 *
 	 * @return The result of the operation.
 	 */
 	private NetworkStatus runControlListener() {
 		try {
-			ControlListenerHandler sl = new ControlListenerHandler(new Integer(cnf.getControlPort().trim()), this, frameworkLOGGER);
+			ControlListenerHandler sl = new ControlListenerHandler(new Integer(cnf.getControlPort().trim()), this);
 			Thread t = new Thread(sl);
 			t.start();
 			return NetworkStatus.SUCCESS;
 		} catch (Exception e) {
-			frameworkLOGGER.severe(MessageFormat.format("Failed to run Control Listener at port= {0}, toString={1}, Message={2}", cnf.getControlPort(), e.toString(), e.getMessage()));
+			LOGGER.fatal(MessageFormat.format("Failed to run Control Listener at port= {0}, toString={1}, Message={2}", cnf.getControlPort(), e.toString(), e.getMessage()));
 			return NetworkStatus.FAILURE;
 		}
 	}
-	
+
 	/**
 	 * Runs listener for incoming server messages
 	 * @return The result of the operation
 	 */
 	private NetworkStatus runServerListener() {
 		try {
-			ServerListener sl = new ServerListener(new Integer(cnf.getServerPort().trim()), this, frameworkLOGGER);
+			ServerListener sl = new ServerListener(new Integer(cnf.getServerPort().trim()), this);
 			Thread t = new Thread(sl);
 			t.start();
 			return NetworkStatus.SUCCESS;
 		} catch (Exception e) {
-			frameworkLOGGER.severe(MessageFormat.format("Failed to run Servers Listener at port= {0}, toString={1}, Message={2}", cnf.getServerPort(), e.toString(), e.getMessage()));
+			LOGGER.fatal("Failed to run Servers Listener at port={}, toString={}, Message={}", cnf.getServerPort(), e.toString(), e.getMessage());
 			return NetworkStatus.FAILURE;
 		}
 	}
 
 	/**
 	 * Runs the listener for clients.
-	 * 
+	 *
 	 * @return The result of the operation.
 	 */
 	private NetworkStatus runClientListener() {
 		try {
-			ClientListener cl = new ClientListener(new Integer(cnf.getClientPort().trim()), this, frameworkLOGGER);
+			ClientListener cl = new ClientListener(new Integer(cnf.getClientPort().trim()), this);
 			Thread t = new Thread(cl);
 			t.start();
 			return NetworkStatus.SUCCESS;
 		} catch (Exception e) {
-			frameworkLOGGER.severe(MessageFormat.format("Failed to run Clients Listener at port= {0}, toString={1}, Message={2}", cnf.getClientPort(), e.toString(), e.getMessage()));
+			LOGGER.fatal("Failed to run Clients Listener at port={}, toString={}, Message={}", cnf.getClientPort(), e.toString(), e.getMessage());
 			return NetworkStatus.FAILURE;
 		}
 	}
@@ -283,7 +277,7 @@ public abstract class DKVFServer extends DKVFBase {
 	/**
 	 * This message will be called for any incoming client message. Any protocol
 	 * needs to implement this method.
-	 * 
+	 *
 	 * @param cma
 	 *            The received client message
 	 */
@@ -292,7 +286,7 @@ public abstract class DKVFServer extends DKVFBase {
 	/**
 	 * This message will be called for any incoming server message. Any protocol
 	 * needs to implement this method.
-	 * 
+	 *
 	 * @param sm
 	 *            The received server message
 	 */
@@ -301,7 +295,7 @@ public abstract class DKVFServer extends DKVFBase {
 	/**
 	 * This method will be called for any unknown control message. A protocol
 	 * can override this method to use control channel.
-	 * 
+	 *
 	 * @param cm
 	 *            The received control message.
 	 * @return The reply to the control message.
@@ -326,7 +320,7 @@ public abstract class DKVFServer extends DKVFBase {
 
 	/**
 	 * Gets the number of clients counter value.
-	 * 
+	 *
 	 * @return Number of clients connected to this server
 	 */
 	public int getNumberOfClients() {
@@ -349,7 +343,7 @@ public abstract class DKVFServer extends DKVFBase {
 
 	/**
 	 * Gets the number of servers counter value.
-	 * 
+	 *
 	 * @return Number of servers connected to this server
 	 */
 	public int getNumberOfServers() {
@@ -358,7 +352,7 @@ public abstract class DKVFServer extends DKVFBase {
 
 	/**
 	 * Gets the server ID.
-	 * 
+	 *
 	 * @return The ID of the server
 	 */
 	public String getId() {
@@ -368,7 +362,7 @@ public abstract class DKVFServer extends DKVFBase {
 	/**
 	 * Gets the number of servers that are expected this server to connect
 	 * according to the configuration.
-	 * 
+	 *
 	 * @return The number of expected servers to connect
 	 */
 	public int getNumOfExpectedServers() {

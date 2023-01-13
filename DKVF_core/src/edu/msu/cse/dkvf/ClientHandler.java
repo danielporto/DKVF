@@ -1,34 +1,30 @@
 package edu.msu.cse.dkvf;
 
 
+import com.google.protobuf.GeneratedMessageV3;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.net.Socket;
-import java.text.MessageFormat;
-import java.util.logging.Logger;
 
-import com.google.protobuf.CodedInputStream;
-import com.google.protobuf.CodedOutputStream;
-
-import edu.msu.cse.dkvf.metadata.Metadata.ClientMessage;
 /**
  * The handler for incoming clients
  *
  */
-public class ClientHandler implements Runnable {
-	/**
+public class ClientHandler<ClientMessage extends GeneratedMessageV3> implements Runnable {/**
 	 * The protocol to run its client handler upon receiving a client message.
 	 */
 	DKVFServer protocol;
 
 	Socket clientSocket;
-	Logger LOGGER;
+	protected static final Logger LOGGER = LogManager.getLogger(ClientHandler.class);
 	/**
-	 * Constructor for ClientHandler. 
+	 * Constructor for ClientHandler.
 	 * @param clientSocket The Socket object of the client
 	 * @param protocol The Protocol object that is used to handle client requests
 	 * @param logger The logger
 	 */
-	public ClientHandler(Socket clientSocket, DKVFServer protocol, Logger logger) {
-		this.LOGGER = logger;
+	public ClientHandler(Socket clientSocket, DKVFServer protocol) {
 		this.clientSocket = clientSocket;
 		this.protocol = protocol;
 	}
@@ -40,23 +36,20 @@ public class ClientHandler implements Runnable {
 	 */
 	public void run() {
 		try {
-			CodedInputStream in = CodedInputStream.newInstance(clientSocket.getInputStream());
-			CodedOutputStream out = CodedOutputStream.newInstance(clientSocket.getOutputStream());
+			LOGGER.info("Waiting on client messages...");
 			while (true) {
-				int size = in.readInt32();
-				byte[] newMessageBytes = in.readRawBytes(size);
-				ClientMessage cm = ClientMessage.parseFrom(newMessageBytes);
+				ClientMessage cm = (ClientMessage) this.protocol.clientMessageParser.parseDelimitedFrom(clientSocket.getInputStream());
 				if (cm == null) {
 					LOGGER.info("Null message from client");
 					protocol.decrementNumberOfClients();
 					return;
 				}
-				LOGGER.finer(MessageFormat.format("New clinet message arrived:\n{0}", cm.toString()));
-				ClientMessageAgent cma = new ClientMessageAgent(cm, out, LOGGER);
+				LOGGER.debug("New client message arrived:\n\t{}", cm.toString());
+				ClientMessageAgent cma = new ClientMessageAgent(cm, clientSocket.getOutputStream());
 				protocol.handleClientMessage(cma);
 			}
 		} catch (Exception e) {
-			LOGGER.severe(Utils.exceptionLogMessge("Error in reading client message. toString: {0} Message:\n{1}", e));
+			LOGGER.fatal(Utils.exceptionLogMessge("Error in reading client message. toString: {0} Message:\n{1}", e));
 			protocol.decrementNumberOfClients();
 		}
 	}

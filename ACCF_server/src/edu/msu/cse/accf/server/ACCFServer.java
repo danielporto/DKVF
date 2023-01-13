@@ -48,10 +48,10 @@ public class ACCFServer extends DKVFServer {
 	int heartbeatInterval;
 	int svvComutationInterval;
 
-	
+
 	//simulation parameters
-	int messageDelay;  
-	
+	int messageDelay;
+
 	// Heartbeat
 	long timeOfLastRepOrHeartbeat;
 
@@ -67,9 +67,9 @@ public class ACCFServer extends DKVFServer {
 		tg_id = new Integer(protocolProperties.get("tg_id").get(0));
 		pId = new Integer(protocolProperties.get("p_id").get(0));
 
-		
+
 		messageDelay = new Integer(protocolProperties.get("message_delay").get(0));
-		
+
 		parentPId = new Integer(protocolProperties.get("parent_p_id").get(0));
 		childrenPIds = new ArrayList<Integer>();
 		if (protocolProperties.get("children_p_ids") != null) {
@@ -90,8 +90,8 @@ public class ACCFServer extends DKVFServer {
 			vv.add(i, new AtomicLong(0));
 			allZero.add(new Long(0));
 		}
-		
-		
+
+
 		childrenVvs = new HashMap<>();
 		for (int cpId: childrenPIds){
 			childrenVvs.put(cpId, allZero);
@@ -108,8 +108,8 @@ public class ACCFServer extends DKVFServer {
 
 		heartbeatTimer.scheduleAtFixedRate(new HeartbeatSender(this), 0, heartbeatInterval, TimeUnit.MILLISECONDS);
 		dsvComputationTimer.scheduleAtFixedRate(new SVVComputation(this), 0, svvComutationInterval, TimeUnit.MILLISECONDS);
-		
-		protocolLOGGER.info("Server initiated sucessfully");
+
+		LOGGER.info("Server initiated sucessfully");
 		channelDelay = messageDelay;
 	}
 
@@ -123,8 +123,8 @@ public class ACCFServer extends DKVFServer {
 	}
 
 	private void handleGetMessage(ClientMessageAgent cma) {
-		protocolLOGGER.info(MessageFormat.format("Get message arrived! for key {0}", cma.getClientMessage().getGetMessage().getKey()));
-		//In this implementation, we assume the server is in only one checking group. Thus, we don't read client's checking group for now. 
+		LOGGER.info(MessageFormat.format("Get message arrived! for key {0}", cma.getClientMessage().getGetMessage().getKey()));
+		//In this implementation, we assume the server is in only one checking group. Thus, we don't read client's checking group for now.
 		//wait for SVV
 		List<TgTimeItem> ds = cma.getClientMessage().getGetMessage().getDsItemList();
 		for (int i = 0; i < ds.size(); i++) {
@@ -132,18 +132,18 @@ public class ACCFServer extends DKVFServer {
 			try {
 			   // synchronized(svv) {
 			        while(vv.get(dti.getTg()).get() < dti.getTime()) {
-			        	protocolLOGGER.info(MessageFormat.format("Waiting! vv[{0}] = {1} while ds[{0}]= {2}", dti.getTg(), vv.get(dti.getTg()).get(), dti.getTime()));
+			        	LOGGER.info(MessageFormat.format("Waiting! vv[{0}] = {1} while ds[{0}]= {2}", dti.getTg(), vv.get(dti.getTg()).get(), dti.getTime()));
 			        	//svv.wait();
 			        	Thread.sleep(1);
 			        }
 			   // }
 			} catch (InterruptedException e) {
-			    protocolLOGGER.severe("Intruption exception while waiting for consistent version");
-			}	
+			    LOGGER.fatal("Intruption exception while waiting for consistent version");
+			}
 		}
 		GetMessage gm = cma.getClientMessage().getGetMessage();
 		List<Record> result = new ArrayList<>();
-		boolean isSvvLargeEnough = true; 
+		boolean isSvvLargeEnough = true;
 		for (int i = 0; i < ds.size(); i++) {
 			TgTimeItem dti = ds.get(i);
 			if (svv.get(dti.getTg()) < dti.getTime()) {
@@ -151,20 +151,20 @@ public class ACCFServer extends DKVFServer {
 				break;
 			}
 		}
-		
-		StorageStatus ss; 
+
+		StorageStatus ss;
 		if (isSvvLargeEnough)
 			ss = read(gm.getKey(), isVisible, result);
-		else 
+		else
 			ss = read(gm.getKey(), (Record r) -> {return true;}, result);
 		ClientReply cr = null;
 		if (ss == StorageStatus.SUCCESS) {
 			Record rec = result.get(0);
-			//protocolLOGGER.info(MessageFormat.format("number of ds items= {0}",  result.get(0).getDsItemCount()));
+			//LOGGER.info(MessageFormat.format("number of ds items= {0}",  result.get(0).getDsItemCount()));
 			//TgTimeItem dti = rec.getDsItem(0);
-			//protocolLOGGER.info(MessageFormat.format("svv[{0}]={1}, d.ds[{0}] = {2}", dti.getTg(), svv.get(dti.getTg()), dti.getTime()));
-			//protocolLOGGER.info(MessageFormat.format("myVV[{0}]={1}, childVV[{0}] = {2}", dti.getTg(), vv.get(dti.getTg()), childrenVvs.get(1).get(0)));
-			
+			//LOGGER.info(MessageFormat.format("svv[{0}]={1}, d.ds[{0}] = {2}", dti.getTg(), svv.get(dti.getTg()), dti.getTime()));
+			//LOGGER.info(MessageFormat.format("myVV[{0}]={1}, childVV[{0}] = {2}", dti.getTg(), vv.get(dti.getTg()), childrenVvs.get(1).get(0)));
+
 			cr = ClientReply.newBuilder().setStatus(true).setGetReply(GetReply.newBuilder().setD(rec)).build();
 		} else {
 			cr = ClientReply.newBuilder().setStatus(false).build();
@@ -174,19 +174,19 @@ public class ACCFServer extends DKVFServer {
 
 
 	Predicate<Record> isVisible = (Record r) -> {
-		//protocolLOGGER.info(MessageFormat.format("number of ds items= {0}",  r.getDsItemCount()));
+		//LOGGER.info(MessageFormat.format("number of ds items= {0}",  r.getDsItemCount()));
 		if (svv.get(r.getTg()) < r.getUt()) {
 			return false;
 		}
 		for (int i = 0; i < r.getDsItemCount(); i++) {
 			TgTimeItem dti = r.getDsItem(i);
-			//protocolLOGGER.info(MessageFormat.format("ssv[{0}]={1}, d.ds[{0}] = {2}", dti.getTg(), svv.get(dti.getTg()), dti.getTime()));
+			//LOGGER.info(MessageFormat.format("ssv[{0}]={1}, d.ds[{0}] = {2}", dti.getTg(), svv.get(dti.getTg()), dti.getTime()));
 			if (svv.get(dti.getTg()) < dti.getTime()) {
-				protocolLOGGER.info("This version is not consistent, so I don't give to!");
+				LOGGER.info("This version is not consistent, so I don't give to!");
 				return false;
-				
+
 			}
-				
+
 		}
 		return true;
 	};
@@ -221,7 +221,7 @@ public class ACCFServer extends DKVFServer {
 				continue;
 			String id = i + "_" + pId;
 
-			protocolLOGGER.finer(MessageFormat.format("Sendng replicate message to {0}: {1}", id, sm.toString()));
+			LOGGER.debug(MessageFormat.format("Sendng replicate message to {0}: {1}", id, sm.toString()));
 			sendToServerViaChannel(id, sm);
 		}
 		timeOfLastRepOrHeartbeat = Utils.getPhysicalTime(); //we don't need to synchronize for it, because it is not critical
@@ -276,7 +276,7 @@ public class ACCFServer extends DKVFServer {
 	}
 
 	private void handleReplicateMessage(ServerMessage sm) {
-		protocolLOGGER.finer(MessageFormat.format("Received replicate message: {0}", sm.toString()));
+		LOGGER.debug(MessageFormat.format("Received replicate message: {0}", sm.toString()));
 		int senderTgId = sm.getReplicateMessage().getTg();
 		Record d = sm.getReplicateMessage().getD();
 		insert(sm.getReplicateMessage().getKey(), d);
@@ -291,13 +291,13 @@ public class ACCFServer extends DKVFServer {
 	void handleVvMessage(ServerMessage sm) {
 		int senderPId = sm.getVvMessage().getPId();
 		List<Long> receivedVv = sm.getVvMessage().getVvItemList();
-		protocolLOGGER.finest("Recieved" + sm.toString());
+		LOGGER.debug("Recieved" + sm.toString());
 		childrenVvs.put(senderPId, receivedVv);
-		
+
 	}
 
 	void handleSvvMessage(ServerMessage sm) {
-		protocolLOGGER.finest(sm.toString());
+		LOGGER.debug(sm.toString());
 		setSvv(sm.getSvvMessage().getSvvItemList());
 		sm = ServerMessage.newBuilder().setSvvMessage(SVVMessage.newBuilder().addAllSvvItem(svv)).build();
 		sendToAllChildren(sm);
@@ -313,7 +313,7 @@ public class ACCFServer extends DKVFServer {
 	void setSvv(List<Long> newSvv) {
 		synchronized (svv) {
 			for (int i=0; i<newSvv.size();i++)
-				svv.set(i, newSvv.get(i));	
+				svv.set(i, newSvv.get(i));
 			svv.notify();
 		}
 	}

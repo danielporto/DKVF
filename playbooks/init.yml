@@ -15,6 +15,36 @@
         - "{{ default_install_dir }}"
         - "{{ default_install_dir }}/{{ protocol }}"      
 
+    - name: Copy default tmux
+      # disable this when running in distributed nodes
+      run_once: true
+      copy:
+        src: templates/tmux.conf
+        dest: "{{ default_install_dir }}/tmux.conf"
+        force: true
+
+    - name: build source code for DKVF_core
+      delegate_to: 127.0.0.1
+      run_once: yes
+      ansible.builtin.shell: |
+        gradle clean build
+      args:
+        executable: /bin/bash
+        chdir: "../DKVF_core"
+
+    - name: Check resulting jar
+      delegate_to: 127.0.0.1
+      run_once: yes
+      stat:
+        path: ../DKVF_core/build/libs/DKVF_core-all-0.0.1-SNAPSHOT.jar
+      register: stat_result
+
+    - name: Make sure that the jar exist locally
+      delegate_to: 127.0.0.1
+      run_once: yes
+      assert:
+        that:
+          - stat_result.stat.exists
 
     # ensure the tasks in this file is done only once.
     # - name: "Define that the init tasks was done."

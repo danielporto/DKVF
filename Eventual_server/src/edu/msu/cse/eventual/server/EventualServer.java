@@ -1,21 +1,16 @@
 package edu.msu.cse.eventual.server;
 
-import java.text.MessageFormat;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-
+import com.google.protobuf.GeneratedMessageV3;
 import edu.msu.cse.dkvf.ClientMessageAgent;
 import edu.msu.cse.dkvf.DKVFServer;
 import edu.msu.cse.dkvf.Storage.StorageStatus;
 import edu.msu.cse.dkvf.config.ConfigReader;
-import edu.msu.cse.dkvf.metadata.Metadata.ClientReply;
-import edu.msu.cse.dkvf.metadata.Metadata.GetMessage;
-import edu.msu.cse.dkvf.metadata.Metadata.GetReply;
-import edu.msu.cse.dkvf.metadata.Metadata.PutReply;
-import edu.msu.cse.dkvf.metadata.Metadata.Record;
-import edu.msu.cse.dkvf.metadata.Metadata.ReplicateMessage;
-import edu.msu.cse.dkvf.metadata.Metadata.ServerMessage;
+import edu.msu.cse.dkvf.eventual.metadata.Metadata;
+import edu.msu.cse.dkvf.eventual.metadata.Metadata.*;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 public class EventualServer extends DKVFServer {
 	ConfigReader cnfReader;
@@ -24,8 +19,8 @@ public class EventualServer extends DKVFServer {
 	int dcId;
 	int pId;
 
-	public EventualServer(ConfigReader cnfReader) {
-		super(cnfReader);
+	public EventualServer(ConfigReader cnfReader) throws IllegalAccessException {
+		super(cnfReader, Metadata.Record.class, Metadata.ServerMessage.class, Metadata.ClientMessage.class, Metadata.ClientReply.class);
 		this.cnfReader = cnfReader;
 		HashMap<String, List<String>> protocolProperties = cnfReader.getProtocolProperties();
 		numOfDatacenters = new Integer(protocolProperties.get("num_of_datacenters").get(0));
@@ -34,19 +29,21 @@ public class EventualServer extends DKVFServer {
 	}
 
 	public void handleClientMessage(ClientMessageAgent cma) {
-		if (cma.getClientMessage().hasGetMessage()) {
+		Metadata.ClientMessage cmsg = (Metadata.ClientMessage) cma.getClientMessage();
+		if (cmsg.hasGetMessage()) {
 			handleGetMessage(cma);
-		} else if (cma.getClientMessage().hasPutMessage()) {
+		} else if (cmsg.hasPutMessage()) {
 			handlePutMessage(cma);
 		}
 	}
 
 	private void handlePutMessage(ClientMessageAgent cma) {
-		Record.Builder builder = Record.newBuilder();
-		builder.setValue(cma.getClientMessage().getPutMessage().getValue());
+		Metadata.ClientMessage cmsg = (Metadata.ClientMessage) cma.getClientMessage();
+		Metadata.Record.Builder builder = Metadata.Record.newBuilder();
+		builder.setValue(cmsg.getPutMessage().getValue());
 		builder.setUt(System.currentTimeMillis());
-		Record rec = builder.build();
-		StorageStatus ss = insert(cma.getClientMessage().getPutMessage().getKey(), rec);
+		Metadata.Record rec = builder.build();
+		StorageStatus ss = insert(cmsg.getPutMessage().getKey(), rec);
 
 		ClientReply cr = null;
 
@@ -57,30 +54,31 @@ public class EventualServer extends DKVFServer {
 		}
 
 		cma.sendReply(cr);
-		sendReplicateMessages(cma.getClientMessage().getPutMessage().getKey(), rec);
+		sendReplicateMessages(cmsg.getPutMessage().getKey(), rec);
 	}
 
-	private void sendReplicateMessages(String key, Record recordToReplicate) {
+	private void sendReplicateMessages(String key, Metadata.Record recordToReplicate) {
 		ServerMessage sm = ServerMessage.newBuilder().setReplicateMessage(ReplicateMessage.newBuilder().setKey(key).setRec(recordToReplicate)).build();
 		for (int i = 0; i < numOfDatacenters; i++) {
 			if (i == dcId)
 				continue;
 			String id = i + "_" + pId;
 
-			protocolLOGGER.finer(MessageFormat.format("Sendng replicate message to {0}: {1}", id, sm.toString()));
+			LOGGER.debug("Sending replicate message to {}: {}", id, sm.toString());
 			sendToServerViaChannel(id, sm);
 		}
 	}
 
 	private void handleGetMessage(ClientMessageAgent cma) {
-		GetMessage gm = cma.getClientMessage().getGetMessage();
-		List<Record> result = new ArrayList<>();
+		Metadata.ClientMessage cmsg = (Metadata.ClientMessage) cma.getClientMessage();
+		GetMessage gm = cmsg.getGetMessage();
+		List<Metadata.Record> result = new ArrayList<>();
 		StorageStatus ss = read(gm.getKey(), p -> {
 			return true;
 		}, result);
 		ClientReply cr = null;
 		if (ss == StorageStatus.SUCCESS) {
-			Record rec = result.get(0);
+			Metadata.Record rec = result.get(0);
 			cr = ClientReply.newBuilder().setStatus(true).setGetReply(GetReply.newBuilder().setValue(rec.getValue())).build();
 		} else {
 			cr = ClientReply.newBuilder().setStatus(false).build();
@@ -88,8 +86,9 @@ public class EventualServer extends DKVFServer {
 		cma.sendReply(cr);
 	}
 
-	public void handleServerMessage(ServerMessage sm) {
-		Record newRecord = sm.getReplicateMessage().getRec();
-		insert(sm.getReplicateMessage().getKey(), newRecord);
+	public void handleServerMessage(GeneratedMessageV3 sm) {
+		ServerMessage smc = (ServerMessage) sm;
+		Metadata.Record newRecord = smc.getReplicateMessage().getRec();
+		insert(smc.getReplicateMessage().getKey(), newRecord);
 	}
 }
