@@ -1,4 +1,4 @@
-package edu.msu.cse.gentleRain.server;
+package edu.msu.cse.gentlerain.server;
 
 import edu.msu.cse.dkvf.config.ConfigReader;
 

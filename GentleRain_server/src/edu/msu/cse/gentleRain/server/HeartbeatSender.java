@@ -1,4 +1,4 @@
-package edu.msu.cse.gentleRain.server;
+package edu.msu.cse.gentlerain.server;
 
 import edu.msu.cse.dkvf.gentlerain.metadata.Metadata.HeartbeatMessage;
 import edu.msu.cse.dkvf.gentlerain.metadata.Metadata.ServerMessage;
@@ -10,7 +10,7 @@ public class HeartbeatSender implements Runnable {
 	}
 	@Override
 	public void run() {
-		long ct = System.currentTimeMillis(); 
+		long ct = System.currentTimeMillis();
 		if (ct > server.timeOfLastRepOrHeartbeat + server.heartbeatInterval){
 			server.vv.get(server.dcId).set(ct);
 			ServerMessage sm = ServerMessage.newBuilder().setHeartbeatMessage(HeartbeatMessage.newBuilder().setDcId(server.dcId).setTime(ct)).build();

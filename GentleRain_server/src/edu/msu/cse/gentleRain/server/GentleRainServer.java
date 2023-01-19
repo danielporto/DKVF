@@ -1,4 +1,4 @@
-package edu.msu.cse.gentleRain.server;
+package edu.msu.cse.gentlerain.server;
 
 import java.text.MessageFormat;
 import java.util.ArrayList;

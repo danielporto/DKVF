@@ -1,4 +1,4 @@
-package edu.msu.cse.gentleRain.server;
+package edu.msu.cse.gentlerain.server;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,7 +19,7 @@ public class GstComputation implements Runnable {
 
 	@Override
 	public void run() {
-		//take minimum of all childrens 
+		//take minimum of all childrens
 		List<Long> minVv = new ArrayList<Long>();
 		for (AtomicLong v : server.vv) {
 			minVv.add(v.get());

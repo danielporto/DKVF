@@ -7,7 +7,7 @@
             <config>
                 <os>macos</os>
                 <client_jar_file>/Users/dporto/devel/DKVF/GentleRain_client/build/libs/GentleRain_client-all-0.0.1-SNAPSHOT.jar</client_jar_file>
-                <client_class_name>edu.msu.cse.gentleRain.client.GentleRainClient</client_class_name>
+                <client_class_name>edu.msu.cse.gentlerain.client.GentleRainClient</client_class_name>
                 <workload>/Users/dporto/devel/DKVF/Tools/properties.txt</workload>
                 <username>dporto</username>
                 <key>/Users/dporto/.ssh/id_rsa_inesc_cluster_dporto</key>
@@ -25,7 +25,7 @@
             <config>
                 <os>macos</os>
                 <client_jar_file>/Users/dporto/devel/DKVF/GentleRain_client/build/libs/GentleRain_client-all-0.0.1-SNAPSHOT.jar</client_jar_file>
-                <client_class_name>edu.msu.cse.gentleRain.client.GentleRainClient</client_class_name>
+                <client_class_name>edu.msu.cse.gentlerain.client.GentleRainClient</client_class_name>
                 <workload>/Users/dporto/devel/DKVF/Tools/properties.txt</workload>
                 <username>dporto</username>
                 <key>/Users/dporto/.ssh/id_rsa_inesc_cluster_dporto</key>

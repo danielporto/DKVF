@@ -1,4 +1,4 @@
-package edu.msu.cse.gentleRain.client;
+package edu.msu.cse.gentlerain.client;
 
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
