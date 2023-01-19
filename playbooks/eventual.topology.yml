@@ -1,0 +1,41 @@
+topology:
+  servers:
+    ds0:
+      id: 0
+      client_port: 2000
+      server_port: 2001
+      control_port: 2002
+      server_to_server_conections:
+        - ds1
+      protocol_settings:
+        dc_id: 0
+        num_of_datacenters: 2
+        p_id: 0
+
+    ds1:
+      id: 1
+      client_port: 3000
+      server_port: 3001
+      control_port: 3002
+      server_to_server_conections:
+        - ds0
+      protocol_settings:
+        dc_id: 1
+        num_of_datacenters: 2
+        p_id: 0
+
+  clients:
+    cl0:
+      id: 0
+      client_to_server_conections:
+        - ds0
+      protocol_settings:
+        dc_id: 0
+        num_of_partitions: 1
+    cl1:
+      id: 1
+      client_to_server_conections:
+        - ds1
+      protocol_settings:
+        dc_id: 1
+        num_of_partitions: 1

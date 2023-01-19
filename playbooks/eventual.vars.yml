@@ -1,0 +1,17 @@
+home_dir: "/Users/dporto"
+default_install_dir: "{{ home_dir }}/devel/DKVF/experiments"
+protocol: "Eventual" # Eventual, COPS, CausalSpartan, GentleRain, Orion, ACCF ; this is case-sensitive
+java_path: "{{ home_dir }}/.asdf/installs/java/zulu-8.54.0.21/zulu-8.jdk/Contents/Home/bin"
+ycsb_operations: 10
+ycsb_duration: 60
+ycsb_database_size: 100
+ycsb_threads_per_client: 1
+tmux_path: "/opt/homebrew/bin"
+
+clientClassName:
+  Eventual: "edu.msu.cse.eventual.client.EventualClient"
+  COPS: "edu.msu.cse.cops.client.COPSClient"
+  CausalSpartan: "edu.msu.cse.causalspartan.client.CausalSpartanClient"
+  GentleRain: "edu.msu.cse.gentlerain.client.GentleRainClient"
+  Orion: "edu.msu.cse.orion.client.OrionClient"
+  ACCF: "edu.msu.cse.accf.client.ACCFClient"
