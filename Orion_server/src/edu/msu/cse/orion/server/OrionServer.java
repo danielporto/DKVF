@@ -17,18 +17,18 @@ import edu.msu.cse.dkvf.ClientMessageAgent;
 import edu.msu.cse.dkvf.DKVFServer;
 import edu.msu.cse.dkvf.Storage.StorageStatus;
 import edu.msu.cse.dkvf.config.ConfigReader;
-import edu.msu.cse.dkvf.metadata.Metadata.ClientReply;
-import edu.msu.cse.dkvf.metadata.Metadata.DSVMessage;
-import edu.msu.cse.dkvf.metadata.Metadata.DcTimeItem;
-import edu.msu.cse.dkvf.metadata.Metadata.GetMessage;
-import edu.msu.cse.dkvf.metadata.Metadata.GetReply;
-import edu.msu.cse.dkvf.metadata.Metadata.PutMessage;
-import edu.msu.cse.dkvf.metadata.Metadata.PutReply;
-import edu.msu.cse.dkvf.metadata.Metadata.RotMessage;
-import edu.msu.cse.dkvf.metadata.Metadata.RotReply;
-import edu.msu.cse.dkvf.metadata.Metadata.Record;
-import edu.msu.cse.dkvf.metadata.Metadata.ReplicateMessage;
-import edu.msu.cse.dkvf.metadata.Metadata.ServerMessage;
+import edu.msu.cse.dkvf.orion.metadata.Metadata.ClientReply;
+import edu.msu.cse.dkvf.orion.metadata.Metadata.DSVMessage;
+import edu.msu.cse.dkvf.orion.metadata.Metadata.DcTimeItem;
+import edu.msu.cse.dkvf.orion.metadata.Metadata.GetMessage;
+import edu.msu.cse.dkvf.orion.metadata.Metadata.GetReply;
+import edu.msu.cse.dkvf.orion.metadata.Metadata.PutMessage;
+import edu.msu.cse.dkvf.orion.metadata.Metadata.PutReply;
+import edu.msu.cse.dkvf.orion.metadata.Metadata.RotMessage;
+import edu.msu.cse.dkvf.orion.metadata.Metadata.RotReply;
+import edu.msu.cse.dkvf.orion.metadata.Metadata.Record;
+import edu.msu.cse.dkvf.orion.metadata.Metadata.ReplicateMessage;
+import edu.msu.cse.dkvf.orion.metadata.Metadata.ServerMessage;
 
 public class OrionServer extends DKVFServer {
 

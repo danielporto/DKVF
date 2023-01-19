@@ -5,9 +5,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
-import edu.msu.cse.dkvf.metadata.Metadata.DSVMessage;
-import edu.msu.cse.dkvf.metadata.Metadata.ServerMessage;
-import edu.msu.cse.dkvf.metadata.Metadata.VVMessage;
+import edu.msu.cse.dkvf.orion.metadata.Metadata.DSVMessage;
+import edu.msu.cse.dkvf.orion.metadata.Metadata.ServerMessage;
+import edu.msu.cse.dkvf.orion.metadata.Metadata.VVMessage;
 
 public class DsvComputation implements Runnable {
 

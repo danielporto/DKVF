@@ -9,12 +9,12 @@ import edu.msu.cse.dkvf.DKVFClient;
 import edu.msu.cse.dkvf.ServerConnector.NetworkStatus;
 import edu.msu.cse.dkvf.Utils;
 import edu.msu.cse.dkvf.config.ConfigReader;
-import edu.msu.cse.dkvf.metadata.Metadata.ClientMessage;
-import edu.msu.cse.dkvf.metadata.Metadata.ClientReply;
-import edu.msu.cse.dkvf.metadata.Metadata.DcTimeItem;
-import edu.msu.cse.dkvf.metadata.Metadata.GetMessage;
-import edu.msu.cse.dkvf.metadata.Metadata.PutMessage;
-import edu.msu.cse.dkvf.metadata.Metadata.RotMessage;
+import edu.msu.cse.dkvf.orion.metadata.Metadata.ClientMessage;
+import edu.msu.cse.dkvf.orion.metadata.Metadata.ClientReply;
+import edu.msu.cse.dkvf.orion.metadata.Metadata.DcTimeItem;
+import edu.msu.cse.dkvf.orion.metadata.Metadata.GetMessage;
+import edu.msu.cse.dkvf.orion.metadata.Metadata.PutMessage;
+import edu.msu.cse.dkvf.orion.metadata.Metadata.RotMessage;
 
 public class OrionClient extends DKVFClient {
 

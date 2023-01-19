@@ -3,39 +3,39 @@ package edu.msu.cse.causalSpartan.server;
 import java.util.ArrayList;
 import java.util.List;
 
-import edu.msu.cse.dkvf.metadata.Metadata.DcTimeItem;
+import edu.msu.cse.dkvf.causalspartan.metadata.Metadata.DcTimeItem;
 
 public class Utils {
 	static List<Long> max (List<Long> first, List<Long> second){
 		List<Long> result = new ArrayList<>();
-		for (int i=0; i < first.size(); i++){ 
+		for (int i=0; i < first.size(); i++){
 			result.set(i, Math.max(first.get(i), second.get(i)));
 		}
 		return result;
 	}
-	
-	
+
+
 	static List<Long> min (List<Long> first, List<Long> second){
 		List<Long> result = new ArrayList<>();
-		for (int i=0; i < first.size(); i++){ 
+		for (int i=0; i < first.size(); i++){
 			result.set(i, Math.min(first.get(i), second.get(i)));
 		}
 		return result;
 	}
-	
+
 	static long getPhysicalTime (){
 		return System.currentTimeMillis();
 	}
-	
-	
+
+
 	static long max (List<DcTimeItem> ds){
-		long result = ds.get(0).getTime(); 
+		long result = ds.get(0).getTime();
 		for (int i = 1; i < ds.size(); i++)
-			if (result < ds.get(i).getTime()) 
+			if (result < ds.get(i).getTime())
 				result = ds.get(i).getTime();
 		return result;
 	}
-	
+
 	//HLC operations
 	public static long getL(long time) {
 		return time & 0xFFFFFFFFFFFF0000L;
@@ -53,7 +53,7 @@ public class Utils {
 	public static long shiftToHighBits(long time) {
 		return time << 16;
 	}
-	
+
 	public static long maxDsTime(List<DcTimeItem> dsItemList) {
 		if (dsItemList == null || dsItemList.isEmpty())
 			return 0;

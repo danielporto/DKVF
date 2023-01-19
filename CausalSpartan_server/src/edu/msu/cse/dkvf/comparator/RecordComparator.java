@@ -1,11 +1,12 @@
 package edu.msu.cse.dkvf.comparator;
 
+import java.io.Serializable;
 import java.util.Comparator;
 import com.google.protobuf.InvalidProtocolBufferException;
 
-import edu.msu.cse.dkvf.eventual.metadata.Metadata.Record;
+import edu.msu.cse.dkvf.causalspartan.metadata.Metadata.Record;
 
-public class RecordComparator implements Comparator<byte[]>, java.io.Serializable{
+public class RecordComparator implements Comparator<byte[]>, Serializable{
 
 	public int compare(byte[] b1, byte[] b2) {
 
@@ -30,5 +31,4 @@ public class RecordComparator implements Comparator<byte[]>, java.io.Serializabl
 		}
 		return -1;
 	}
-
 }

@@ -12,11 +12,11 @@ import edu.msu.cse.dkvf.DKVFClient;
 import edu.msu.cse.dkvf.ServerConnector.NetworkStatus;
 import edu.msu.cse.dkvf.Utils;
 import edu.msu.cse.dkvf.config.ConfigReader;
-import edu.msu.cse.dkvf.metadata.Metadata.ClientMessage;
-import edu.msu.cse.dkvf.metadata.Metadata.ClientReply;
-import edu.msu.cse.dkvf.metadata.Metadata.DcTimeItem;
-import edu.msu.cse.dkvf.metadata.Metadata.GetMessage;
-import edu.msu.cse.dkvf.metadata.Metadata.PutMessage;
+import edu.msu.cse.dkvf.causalspartan.metadata.Metadata.ClientMessage;
+import edu.msu.cse.dkvf.causalspartan.metadata.Metadata.ClientReply;
+import edu.msu.cse.dkvf.causalspartan.metadata.Metadata.DcTimeItem;
+import edu.msu.cse.dkvf.causalspartan.metadata.Metadata.GetMessage;
+import edu.msu.cse.dkvf.causalspartan.metadata.Metadata.PutMessage;
 
 public class CausalSpartanClient extends DKVFClient {
 

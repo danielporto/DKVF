@@ -1,7 +1,7 @@
 package edu.msu.cse.causalSpartan.server;
 
-import edu.msu.cse.dkvf.metadata.Metadata.HeartbeatMessage;
-import edu.msu.cse.dkvf.metadata.Metadata.ServerMessage;
+import edu.msu.cse.dkvf.causalspartan.metadata.Metadata.HeartbeatMessage;
+import edu.msu.cse.dkvf.causalspartan.metadata.Metadata.ServerMessage;
 
 public class HeartbeatSender implements Runnable {
 	CausalSpartanServer server;
@@ -10,7 +10,7 @@ public class HeartbeatSender implements Runnable {
 	}
 	@Override
 	public void run() {
-		long ct = System.currentTimeMillis(); 
+		long ct = System.currentTimeMillis();
 		if (ct > server.timeOfLastRepOrHeartbeat + server.heartbeatInterval){
 			server.updateHlc();
 			ServerMessage sm = ServerMessage.newBuilder().setHeartbeatMessage(HeartbeatMessage.newBuilder().setDcId(server.dcId).setTime(server.vv.get(server.dcId).get())).build();

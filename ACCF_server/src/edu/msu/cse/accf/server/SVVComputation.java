@@ -8,9 +8,9 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import com.sun.corba.se.impl.orb.PropertyOnlyDataCollector;
 
-import edu.msu.cse.dkvf.metadata.Metadata.SVVMessage;
-import edu.msu.cse.dkvf.metadata.Metadata.ServerMessage;
-import edu.msu.cse.dkvf.metadata.Metadata.VVMessage;
+import edu.msu.cse.dkvf.accf.metadata.Metadata.SVVMessage;
+import edu.msu.cse.dkvf.accf.metadata.Metadata.ServerMessage;
+import edu.msu.cse.dkvf.accf.metadata.Metadata.VVMessage;
 
 public class SVVComputation implements Runnable {
 
@@ -22,12 +22,12 @@ public class SVVComputation implements Runnable {
 
 	@Override
 	public void run() {
-		//take minimum of all childrens 
+		//take minimum of all childrens
 		List<Long> minVv = new ArrayList<Long>();
 		for (AtomicLong v : server.vv) {
 			minVv.add(v.get());
 		}
-		
+
 		for (Map.Entry<Integer, List<Long>> childVv : server.childrenVvs.entrySet()) {
 			for (int i = 0; i < childVv.getValue().size(); i++) {
 				//server.LOGGER.info(MessageFormat.format("###########myVV[{0}]= {1}, childVV[{0}] = {2}", i, minVv.get(i), childVv.getValue().get(i)));

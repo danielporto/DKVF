@@ -16,16 +16,16 @@ import edu.msu.cse.dkvf.DKVFServer;
 import edu.msu.cse.dkvf.Storage.StorageStatus;
 import edu.msu.cse.causalSpartan.server.Utils;
 import edu.msu.cse.dkvf.config.ConfigReader;
-import edu.msu.cse.dkvf.metadata.Metadata.ClientReply;
-import edu.msu.cse.dkvf.metadata.Metadata.DSVMessage;
-import edu.msu.cse.dkvf.metadata.Metadata.DcTimeItem;
-import edu.msu.cse.dkvf.metadata.Metadata.GetMessage;
-import edu.msu.cse.dkvf.metadata.Metadata.GetReply;
-import edu.msu.cse.dkvf.metadata.Metadata.PutMessage;
-import edu.msu.cse.dkvf.metadata.Metadata.PutReply;
-import edu.msu.cse.dkvf.metadata.Metadata.Record;
-import edu.msu.cse.dkvf.metadata.Metadata.ReplicateMessage;
-import edu.msu.cse.dkvf.metadata.Metadata.ServerMessage;
+import edu.msu.cse.dkvf.causalspartan.metadata.Metadata.ClientReply;
+import edu.msu.cse.dkvf.causalspartan.metadata.Metadata.DSVMessage;
+import edu.msu.cse.dkvf.causalspartan.metadata.Metadata.DcTimeItem;
+import edu.msu.cse.dkvf.causalspartan.metadata.Metadata.GetMessage;
+import edu.msu.cse.dkvf.causalspartan.metadata.Metadata.GetReply;
+import edu.msu.cse.dkvf.causalspartan.metadata.Metadata.PutMessage;
+import edu.msu.cse.dkvf.causalspartan.metadata.Metadata.PutReply;
+import edu.msu.cse.dkvf.causalspartan.metadata.Metadata.Record;
+import edu.msu.cse.dkvf.causalspartan.metadata.Metadata.ReplicateMessage;
+import edu.msu.cse.dkvf.causalspartan.metadata.Metadata.ServerMessage;
 
 public class CausalSpartanServer extends DKVFServer {
 
@@ -81,8 +81,8 @@ public class CausalSpartanServer extends DKVFServer {
 			vv.add(i, new AtomicLong(0));
 			allZero.add(new Long(0));
 		}
-		
-		
+
+
 		childrenVvs = new HashMap<>();
 		for (int cpId: childrenPIds){
 			childrenVvs.put(cpId, allZero);
@@ -271,13 +271,13 @@ public class CausalSpartanServer extends DKVFServer {
 	void setDsv(List<Long> newDsv) {
 		synchronized (dsv) {
 			for (int i=0; i<newDsv.size();i++)
-				dsv.set(i, newDsv.get(i));	
+				dsv.set(i, newDsv.get(i));
 		}
 	}
-	
+
 	private List<DcTimeItem> updateDS(int dc, long time, List<DcTimeItem> ds) {
 		List<DcTimeItem> result = new ArrayList<>();
-		
+
 		for (int i=0; i < ds.size(); i++){
 			if (ds.get(i).getDcId() != dc)
 				result.add(ds.get(i));

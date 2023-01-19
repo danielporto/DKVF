@@ -1,7 +1,7 @@
 package edu.msu.cse.orion.server;
 
-import edu.msu.cse.dkvf.metadata.Metadata.HeartbeatMessage;
-import edu.msu.cse.dkvf.metadata.Metadata.ServerMessage;
+import edu.msu.cse.dkvf.orion.metadata.Metadata.HeartbeatMessage;
+import edu.msu.cse.dkvf.orion.metadata.Metadata.ServerMessage;
 
 public class HeartbeatSender implements Runnable {
     OrionServer server;

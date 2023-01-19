@@ -16,16 +16,16 @@ import edu.msu.cse.dkvf.ClientMessageAgent;
 import edu.msu.cse.dkvf.DKVFServer;
 import edu.msu.cse.dkvf.Storage.StorageStatus;
 import edu.msu.cse.dkvf.config.ConfigReader;
-import edu.msu.cse.dkvf.metadata.Metadata.ClientReply;
-import edu.msu.cse.dkvf.metadata.Metadata.GetMessage;
-import edu.msu.cse.dkvf.metadata.Metadata.GetReply;
-import edu.msu.cse.dkvf.metadata.Metadata.PutMessage;
-import edu.msu.cse.dkvf.metadata.Metadata.PutReply;
-import edu.msu.cse.dkvf.metadata.Metadata.Record;
-import edu.msu.cse.dkvf.metadata.Metadata.ReplicateMessage;
-import edu.msu.cse.dkvf.metadata.Metadata.SVVMessage;
-import edu.msu.cse.dkvf.metadata.Metadata.ServerMessage;
-import edu.msu.cse.dkvf.metadata.Metadata.TgTimeItem;
+import edu.msu.cse.dkvf.accf.metadata.Metadata.ClientReply;
+import edu.msu.cse.dkvf.accf.metadata.Metadata.GetMessage;
+import edu.msu.cse.dkvf.accf.metadata.Metadata.GetReply;
+import edu.msu.cse.dkvf.accf.metadata.Metadata.PutMessage;
+import edu.msu.cse.dkvf.accf.metadata.Metadata.PutReply;
+import edu.msu.cse.dkvf.accf.metadata.Metadata.Record;
+import edu.msu.cse.dkvf.accf.metadata.Metadata.ReplicateMessage;
+import edu.msu.cse.dkvf.accf.metadata.Metadata.SVVMessage;
+import edu.msu.cse.dkvf.accf.metadata.Metadata.ServerMessage;
+import edu.msu.cse.dkvf.accf.metadata.Metadata.TgTimeItem;
 
 public class ACCFServer extends DKVFServer {
 

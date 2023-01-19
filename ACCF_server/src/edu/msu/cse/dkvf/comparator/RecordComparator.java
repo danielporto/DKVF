@@ -4,9 +4,9 @@ import java.io.Serializable;
 import java.util.Comparator;
 import com.google.protobuf.InvalidProtocolBufferException;
 
-import edu.msu.cse.dkvf.eventual.metadata.Metadata.Record;
+import edu.msu.cse.dkvf.accf.metadata.Metadata.Record;
 
-public class RecordComparator implements Comparator<byte[]>, Serializable {
+public class RecordComparator implements Comparator<byte[]>, Serializable{
 
 	public int compare(byte[] b1, byte[] b2) {
 
@@ -20,8 +20,8 @@ public class RecordComparator implements Comparator<byte[]>, Serializable {
 				return -1;
 			else if (record1.getUt() == record2.getUt()) {
 				// if timestamps are equal we give priority to the version with
-				// hgiher dc number.
-				if (record1.getSr() > record2.getSr())
+				// higher dc number.
+				if (record1.getTg() > record2.getTg())  //Note: In this implementation, we assume in each tracking group, there is only one writer for each key.
 					return -1;
 			}
 			return 1;

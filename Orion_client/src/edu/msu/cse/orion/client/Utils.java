@@ -3,7 +3,7 @@ package edu.msu.cse.orion.client;
 import java.util.ArrayList;
 import java.util.List;
 
-import edu.msu.cse.dkvf.metadata.Metadata.DcTimeItem;
+import edu.msu.cse.dkvf.orion.metadata.Metadata.DcTimeItem;
 
 public class Utils {
     static List<Long> max(List<Long> first, List<Long> second) {

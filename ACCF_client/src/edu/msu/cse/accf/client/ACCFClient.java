@@ -12,11 +12,11 @@ import edu.msu.cse.dkvf.DKVFClient;
 import edu.msu.cse.dkvf.ServerConnector.NetworkStatus;
 import edu.msu.cse.dkvf.Utils;
 import edu.msu.cse.dkvf.config.ConfigReader;
-import edu.msu.cse.dkvf.metadata.Metadata.ClientMessage;
-import edu.msu.cse.dkvf.metadata.Metadata.ClientReply;
-import edu.msu.cse.dkvf.metadata.Metadata.GetMessage;
-import edu.msu.cse.dkvf.metadata.Metadata.PutMessage;
-import edu.msu.cse.dkvf.metadata.Metadata.TgTimeItem;
+import edu.msu.cse.dkvf.accf.metadata.Metadata.ClientMessage;
+import edu.msu.cse.dkvf.accf.metadata.Metadata.ClientReply;
+import edu.msu.cse.dkvf.accf.metadata.Metadata.GetMessage;
+import edu.msu.cse.dkvf.accf.metadata.Metadata.PutMessage;
+import edu.msu.cse.dkvf.accf.metadata.Metadata.TgTimeItem;
 
 public class ACCFClient extends DKVFClient {
 	HashMap<Integer, Long> ds; //dependency set
