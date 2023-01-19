@@ -1,0 +1,23 @@
+---
+- hosts: servers
+  become: no
+  any_errors_fatal: true
+  gather_facts: no
+  vars_files:
+      - vars.yml
+      - topology.yml
+
+  tasks:
+
+
+  - name: Check if processes are already started
+    ansible.builtin.shell: |
+      ps -ax | grep -E '{{protocol}}_server' | grep "server{{topology['servers'][inventory_hostname].id}}.conf" | grep -v grep | awk '{print $1}' | tr '\n' ' '          
+
+    args:
+      executable: /bin/bash
+    register: start_processes 
+
+  - name: IDs of processes to skip starting
+    debug: 
+      msg:  "Server server{{topology['servers'][inventory_hostname].id}}: {{ start_processes.stdout }}"
